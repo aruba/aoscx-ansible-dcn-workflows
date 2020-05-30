@@ -180,7 +180,7 @@ using **REST API**:
   1. Create [VSX Keepalive](https://github.com/aruba/aoscx-ansible-dcn-workflows/blob/master/inventory_2tier_dedicated_dc.yml#L31) L3 Interface
   1. Create [VSX Inter-switch link](https://github.com/aruba/aoscx-ansible-dcn-workflows/blob/master/inventory_2tier_dedicated_dc.yml#L32-L33)
   1. Configure [VSX attributes](https://github.com/aruba/aoscx-ansible-dcn-workflows/blob/master/inventory_2tier_dedicated_dc.yml#L44-L46) on the switch and specify device role as outlined in the [inventory](https://github.com/aruba/aoscx-ansible-dcn-workflows/blob/master/inventory_2tier_dedicated_dc.yml#L51)
-  1. Create all VLANs defined as `server_vlans` in the [inventory](https://github.com/aruba/aoscx-ansible-dcn-workflows/blob/master/inventory_2tier_dedicated_dc.yml#L27)
+  1. Create all VLANs defined as `server_vlans` in the [inventory](https://github.com/aruba/aoscx-ansible-dcn-workflows/blob/master/inventory_2tier_dedicated_dc.yml#L25)
   1. Create SVIs for all VLANs defined as `core_vlan_interfaces` in the [inventory](https://github.com/aruba/aoscx-ansible-dcn-workflows/blob/master/inventory_2tier_dedicated_dc.yml#L105-L109)
   1. Configure the multi-chassis LAGs that connect to each access switch and trunk the VLANs in [`trunk_vlans`](https://github.com/aruba/aoscx-ansible-dcn-workflows/blob/master/inventory_2tier_dedicated_dc.yml#L90).
      * **Note:** `rack_mclags` is a list of 'rack' information for the core devices to use for configuring downlink interfaces. You should modify these values appropriately to match your environment.
