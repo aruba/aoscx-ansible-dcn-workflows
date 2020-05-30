@@ -1,0 +1,122 @@
+##########################
+# Aruba DCN Workflows
+# Example Inventory
+##########################
+all:
+  children: # Defining High Level Groups
+    aoscx_switches: # Group for all necessary Ansible connection CX variables
+      vars:
+        ansible_user: admin   # switch login user - used by aoscx_role
+        ansible_password: admin   # switch login password - used by aoscx_role
+        ansible_connection: httpapi   # DO NOT CHANGE
+        ansible_network_os: aoscx   # DO NOT CHANGE
+        ansible_httpapi_use_ssl: True   # DO NOT CHANGE
+        ansible_httpapi_validate_certs: False   # Will change depending on your environment
+        ansible_acx_no_proxy: True   # REMOVE
+      children:
+        Zone1:  # Group for common variables within a specific DC Zone/Pod
+          vars:
+            hostname: "{{inventory_hostname}}" # hostname of the device is set to the device's inventory name
+            mtu: 9198
+            config_path: "configs/" # Destination directory for generated switch configurations
+            ospf_area: 0.0.0.0  # OSPF is enabled to support iBGP peering between the “Zone1-Core” switches
+            asn: 65101  # eBGP towards “DC-Core” switches
+            ibgp_transit_vlan: 4000  # iBGP transit VLAN between “Zone1-Core” switches
+            server_vlans: [11]  # VLANs to be created on for server traffic
+            # Spanning Tree
+            stp_priority: 1
+            stp_config_name: Zone1
+            stp_rev_num: 1
+            # VSX information
+            vsx_keepalive_int: 1/1/31
+            vsx_isl_ports: ['1/1/32']
+            vsx_isl_lagid: 1
+          children:
+            access:
+              # Access devices are grouped by "rack" location to group VSX pairs,
+              # names of racks can be anything alphanumeric
+              # devices do not have to be physically in the same "rack"
+              children:
+                rack1:
+                  vars:
+                    core_mclag_id: 11   # MCLAG ID for Core uplinks
+                    # VSX information
+                    vsx_system_mac: 00:00:00:00:01:11
+                    vsx_keepalive_ip_primary: 192.168.1.110
+                    vsx_keepalive_ip_secondary: 192.168.1.111
+                  hosts:
+                    Zone1-Rack1-Access1:
+                      ansible_host: 10.10.10.56 # IP address of the switch, change to match devices in your environment
+                      vsx_role: primary
+                      loopback0_ip: 192.168.1.1
+                    Zone1-Rack1-Access2:
+                      ansible_host: 10.10.10.57 # IP address of the switch, change to match devices in your environment
+                      vsx_role: secondary
+                      loopback0_ip: 192.168.1.2
+                rack3:
+                  vars:
+                    core_mclag_id: 12   # MCLAG ID for Core uplinks
+                    # VSX information
+                    vsx_system_mac: 00:00:00:00:03:13
+                    vsx_keepalive_ip_primary: 192.168.1.112
+                    vsx_keepalive_ip_secondary: 192.168.1.113
+                  hosts:
+                    Zone1-Rack3-Access3:
+                      ansible_host: 10.10.10.60 # IP address of the switch, change to match devices in your environment
+                      vsx_role: primary
+                      loopback0_ip: 192.168.1.5
+                    Zone1-Rack3-Access4:
+                      ansible_host: 10.10.10.61 # IP address of the switch, change to match devices in your environment
+                      vsx_role: secondary
+                      loopback0_ip: 192.168.1.6
+              vars:
+                config_template: templates/2Tier/access.j2
+                core_mclag_uplink_ports: ['1/1/49', '1/1/50'] # Interfaces that will be a part of the MCLAG connecting access device to core
+                core_mclag_description: Zone1-Cores
+                speed_interface_group_10g: [1,3]  # Enables 10g speed on specified interface groups, remove variable if unused
+            core:
+              vars:
+                config_template: templates/2Tier/core.j2
+                # VSX information
+                vsx_system_mac: 00:00:00:00:01:01
+                vsx_keepalive_ip_primary: 192.168.1.100
+                vsx_keepalive_ip_secondary: 192.168.1.101
+                # Core MCLAG information for downlinks to each rack and each access switch
+                rack_mclags:
+                  - location: rack1
+                    access_mclag_downlink_ports: ['1/1/27', '1/1/28'] # Interfaces that will be a part of the MCLAG connecting the core devices to access
+                    mclag_id: 11
+                    mclag_description: Zone1-Rack1-Access1/2
+                    trunk_vlans: "{{server_vlans}}"
+                  - location: rack3
+                    access_mclag_downlink_ports: ['1/1/23', '1/1/24'] # Interfaces that will be a part of the MCLAG connecting the core devices to access
+                    mclag_id: 12
+                    mclag_description: Zone1-Rack3-Access3/4
+                    trunk_vlans: "{{server_vlans}}"
+              hosts:
+                Zone1-Core1a:
+                  ansible_host: 10.10.10.54 # IP address of the switch, change to match devices in your environment
+                  ibgp_transit_vlan_ip: 10.1.2.2
+                  core_vsx_neighbor_ip: "{{hostvars['Zone1-Core1b']['loopback0_ip']}}"   # Used for iBGP between Zone core switches
+                  loopback0_ip: 192.168.1.11
+                  vsx_role: primary
+                  # For every VLAN in server_vlans there should exist an entry under core_vlan_interfaces
+                  # for server subnets
+                  core_vlan_interfaces:
+                    - vlan_id: 11
+                      ipv4: 11.1.1.3/24
+                      active_gateway_ip: 11.1.1.1
+                      active_gateway_mac: 00:00:00:00:01:01
+                Zone1-Core1b:
+                  ansible_host: 10.10.10.55 # IP address of the switch, change to match devices in your environment
+                  ibgp_transit_vlan_ip: 10.1.2.3
+                  core_vsx_neighbor_ip: "{{hostvars['Zone1-Core1a']['loopback0_ip']}}"   # Used for iBGP between Zone core switches
+                  loopback0_ip: 192.168.1.12
+                  vsx_role: secondary
+                  # For every VLAN in server_vlans there should exist an entry under core_vlan_interfaces
+                  # for server subnets
+                  core_vlan_interfaces:
+                    - vlan_id: 11
+                      ipv4: 11.1.1.4/24
+                      active_gateway_ip: 11.1.1.1
+                      active_gateway_mac: 00:00:00:00:01:01

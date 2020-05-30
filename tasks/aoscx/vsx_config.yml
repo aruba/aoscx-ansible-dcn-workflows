@@ -1,0 +1,52 @@
+# This task list is used to configure VSX and its attributes
+- block:
+    # Login to AOS-CX Switch
+    - name: Login to AOS-CX Switch
+      uri:
+        url: "https://{{ ansible_host }}/rest/v1/login"
+        method: POST
+        return_content: yes
+        headers:
+          Content-Type: "application/x-www-form-urlencoded"
+          Accept: application/json
+        body: "username={{ ansible_user }}&password={{ ansible_password }}"
+        validate_certs: no
+        status_code: 200
+        follow_redirects: yes
+      register: cx_session
+
+    # Create VSX table entry
+    - name: Create VSX table entry
+      uri:
+        url: "https://{{ ansible_host }}/rest/v1/system/vsx"
+        method: POST
+        body_format: json
+        headers:
+          cookie: "{{ cx_session.set_cookie }}"
+        body: {
+                "device_role": "{{ role }}",
+                "isl_port": "/rest/v1/system/ports/lag{{ isl_lag_id }}",
+                "keepalive_peer_ip": "{{ keepalive_peer_ip }}",
+                "keepalive_src_ip": "{{ keepalive_src_ip }}",
+                "system_mac": "{{ system_mac }}"
+              }
+        validate_certs: no
+        status_code: 201
+      register: response
+      changed_when: response.status == 201
+
+  rescue:
+    - debug:
+        msg: "{{ response.msg }}"
+
+  always:
+    # Logout from AOS-CX Switch
+    - name: Logout from AOS-CX Switch
+      uri:
+        url: 'https://{{ ansible_host }}/rest/v1/logout'
+        method: POST
+        body_format: json
+        headers:
+          cookie: "{{ cx_session.set_cookie }}"
+        validate_certs: no
+        status_code: 200

@@ -1,0 +1,42 @@
+hostname {{hostname}}
+!
+!
+!
+ssh server vrf mgmt
+!
+!
+!
+!
+!
+router ospf 1
+    router-id {{loopback0_ip}}
+    area {{ospf_area}}
+vlan 1
+vlan {{ibgp_transit_vlan}}
+spanning-tree
+spanning-tree priority {{stp_priority}}
+spanning-tree config-name {{stp_config_name}}
+spanning-tree config-revision {{stp_rev_num}}
+{% for vlan in server_vlans %}
+spanning-tree instance 1 vlan {{vlan}}
+{% endfor %}
+interface vlan4000
+    description IBGP transit
+    ip address {{ibgp_transit_vlan_ip}}/31
+    ip ospf 1 area {{ospf_area}}
+    ip ospf network point-to-point
+{% if  mtu is defined %}
+    ip mtu {{mtu}}
+{% endif %}
+interface loopback 0
+    ip address {{loopback0_ip}}/32
+    ip ospf 1 area {{ospf_area}}
+router bgp {{asn}}
+    bgp router-id {{loopback0_ip}}
+	address-family ipv4 unicast	
+{% for vlan in core_vlan_interfaces %}
+	    network {{vlan.ipv4 | ipaddr('0')}}
+{% endfor %}	
+!
+https-server rest access-mode read-write
+https-server vrf mgmt

@@ -1,0 +1,76 @@
+hostname {{hostname}}
+!
+!
+!
+ssh server vrf mgmt
+!
+!
+!
+!
+!
+vlan 1
+interface {{vsx_keepalive_int}}
+    no shutdown
+    description VSX KA
+{% if vsx_role == 'primary' %}
+    ip address {{vsx_keepalive_ip_primary}}/31
+{% else %}
+    ip address {{vsx_keepalive_ip_secondary}}/31
+{% endif %}
+interface lag {{vsx_isl_lagid}}
+    no shutdown
+    description VSX ISL LAG
+    no routing
+    vlan trunk native 1 tag
+    vlan trunk allowed all
+    lacp mode active
+{% for interface in vsx_isl_ports %}
+interface {{interface}}
+    no shutdown
+    description VSX ISL
+{% if  mtu is defined %}
+    mtu {{mtu}}
+{% endif %}
+    lag {{vsx_isl_lagid}}
+{% endfor %}
+{% for int_data in rack_L3fabric_ips %}
+interface {{int_data.interface}}
+    no shutdown
+{% if  mtu is defined %}
+    ip mtu {{mtu}}
+    mtu {{mtu}}
+{% endif %}
+    description Spine-Uplink
+    ip address {{int_data.ipv4}}/31
+{% endfor %}
+interface loopback 0
+    ip address {{loopback0_ip}}/32
+interface loopback 1
+    ip address {{loopback1_ip}}/32
+vsx
+    inter-switch-link lag {{vsx_isl_lagid}}
+    role {{vsx_role}}
+{% if vsx_role == 'primary' %}
+    keepalive peer {{vsx_keepalive_ip_secondary}} source {{vsx_keepalive_ip_primary}}
+{% else %}
+    keepalive peer {{vsx_keepalive_ip_primary}} source {{vsx_keepalive_ip_secondary}}
+{% endif %}
+    no split-recovery
+router bgp {{rack_asn}}
+    bgp router-id {{loopback0_ip}}
+    bgp fast-external-fallover
+    bgp bestpath as-path multipath-relax
+{% for spine_ip in spine_L3fabric_ips %}
+    neighbor {{spine_ip}} remote-as {{asn}}
+{% endfor %}
+    address-family ipv4 unicast
+{% for spine_ip in spine_L3fabric_ips %}
+        neighbor {{spine_ip}} activate
+{% endfor %}
+        redistribute connected
+        network {{loopback0_ip}}/32
+        network {{loopback1_ip}}/32
+    exit-address-family
+!
+https-server rest access-mode read-write
+https-server vrf mgmt

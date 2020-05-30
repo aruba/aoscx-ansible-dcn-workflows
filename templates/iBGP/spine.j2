@@ -1,0 +1,36 @@
+hostname {{hostname}}
+!
+!
+!
+ssh server vrf mgmt
+!
+!
+!
+!
+!
+router ospf 1
+    router-id {{loopback0_ip}}
+    area {{ospf_area}}
+vlan 1
+{% for rack, rack_data in rack_downlinks.items() %}
+{% for interface_data in rack_data %}
+interface {{interface_data.rack_downlink_int}}
+    no shutdown
+{% if  mtu is defined %}
+    ip mtu {{mtu}}
+    mtu {{mtu}}
+{% endif %}
+    description {{rack}}-Downlink
+    ip address {{interface_data.rack_downlink_ip}}/31
+    ip ospf 1 area {{ospf_area}}
+    ip ospf network point-to-point
+{% endfor %}
+{% endfor %}
+interface loopback 0
+    ip address {{loopback0_ip}}/32
+    ip ospf 1 area {{ospf_area}}
+router bgp {{asn}}
+    bgp router-id {{loopback0_ip}}
+!
+https-server rest access-mode read-write
+https-server vrf mgmt

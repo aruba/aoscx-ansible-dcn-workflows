@@ -1,0 +1,20 @@
+hostname {{hostname}}
+!
+!
+!
+ssh server vrf mgmt
+!
+!
+!
+!
+!
+vlan 1
+spanning-tree
+spanning-tree config-name {{stp_config_name}}
+spanning-tree config-revision {{stp_rev_num}}
+{% for vlan in server_vlans %}
+spanning-tree instance 1 vlan {{vlan}}
+{% endfor %}
+!
+https-server rest access-mode read-write
+https-server vrf mgmt

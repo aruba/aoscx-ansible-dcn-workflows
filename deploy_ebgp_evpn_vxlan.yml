@@ -1,0 +1,86 @@
+---
+- hosts: aoscx_switches
+  roles:
+    - role: arubanetworks.aoscx_role
+  gather_facts: False
+  vars:
+    ansible_connection: network_cli
+  tasks:
+    - name: Generate Template for Device
+      template: src="{{templates_path | default("./")}}eBGP/{{config_template}}" dest="{{config_path}}{{inventory_hostname}}.conf" mode='0777'
+
+    - name: Copy generated config to device via SSH
+      aoscx_config:
+        src: "{{config_path}}{{hostname}}.conf"
+
+    - name: Configure system interface-group speeds when provided
+      block:
+      - name: Enable auto-confirm
+        aoscx_command:
+          commands: ['auto-confirm']
+
+      - name: enabling 10g speed on system interface-group {{item}}
+        aoscx_config:
+          lines:
+            - system interface-group {{item}} speed 10g
+        loop: "{{speed_interface_group_10g}}"
+
+      - name: Disable auto-confirm
+        aoscx_command:
+          commands: ['no auto-confirm']
+      when: speed_interface_group_10g is defined
+
+- hosts: spine
+  connection: local
+  tasks:
+    - name: Create BGP Neighbors and EVPN Address Family on Spine for Racks
+      include: tasks/aoscx/add_list_of_bgp_neighbors.yml
+      vars:
+        bgp_asn: "{{asn}}"
+        bgp_neighbors: "{{item.loopback_ips}}"
+        bgp_neighbors_asn: "{{item.rack_asn|int}}"
+        ebgp_hop_count: 3
+        nexthopunchanged: True
+        l2_evpn: True
+        send_community_l2_evpn: extended
+      loop: "{{racks}}"
+
+- hosts: leaf
+  roles:
+    - role: arubanetworks.aoscx_role
+  gather_facts: False
+  tasks:
+    - name: Create BGP Neighbors and EVPN Address Family
+      include: tasks/aoscx/bgp_neighbor.yml
+      vars:
+        neighbor_ip: "{{item}}"
+        ebgp_hop_count: 3
+        remote_as: "{{asn|int}}"
+        nexthopunchanged: True
+        l2_evpn: True
+        send_community_l2_evpn: extended
+        bgp_asn: "{{rack_asn}}"
+      loop: "{{spine_loopback0_ips}}"
+
+    - name: Create Server VLANs
+      aoscx_vlan:
+        vlan_id: "{{item}}"
+        description: Server VLAN
+      loop: "{{server_vlans}}"
+
+    - name: Create VXLAN interface
+      include: tasks/aoscx/vxlan.yml
+      vars:
+        vxlan: vxlan1
+        source_ip: "{{loopback1_ip}}"
+        vlan_id: "{{item|int}}"
+      loop: "{{server_vlans}}"
+
+    - name: Create EVPN instance and VLAN mapping
+      include: tasks/aoscx/evpn.yml
+      vars:
+        export_route: ['1:{{item}}']
+        import_route: ['1:{{item}}']
+        rd: auto
+        vlan_id: "{{item|int}}"
+      loop: "{{server_vlans}}"

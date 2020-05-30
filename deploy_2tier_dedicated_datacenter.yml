@@ -1,0 +1,144 @@
+- hosts: all
+  gather_facts: False
+  roles:
+    - role: arubanetworks.aoscx_role
+  vars:
+    ansible_connection: network_cli
+  tasks:
+    - name: Generate Template for Device
+      template: src="{{config_template}}" dest="{{config_path}}{{hostname}}.conf" mode='0777'
+
+    - name: Copy generated config to device via SSH
+      aoscx_config:
+        src: "{{config_path}}{{hostname}}.conf"
+
+    - name: Configure system interface-group speeds when provided
+      block:
+      - name: Enable auto-confirm
+        aoscx_command:
+          commands: ['auto-confirm']
+
+      - name: enabling 10g speed on system interface-group {{item}}
+        aoscx_config:
+          lines:
+            - system interface-group {{item}} speed 10g
+        loop: "{{speed_interface_group_10g}}"
+
+      - name: Disable auto-confirm
+        aoscx_command:
+          commands: ['no auto-confirm']
+      when: speed_interface_group_10g is defined
+
+- hosts: core
+  gather_facts: False
+  roles:
+    - role: arubanetworks.aoscx_role
+  tasks:
+    - set_fact:
+        is_primary: "{{ vsx_role == 'primary' }}"
+
+    - name: Create VSX keepalive L3 interface
+      aoscx_l3_interface:
+        interface: "{{ vsx_keepalive_int }}"
+        description: "VSX KA"
+        ipv4: "{{ vsx_keepalive_ip_primary if is_primary else vsx_keepalive_ip_secondary}}/31"
+
+    # Uses URI module
+    - name: Create ISL LAG for VSX
+      include: tasks/aoscx/create_lag.yml
+      vars:
+        ports: "{{ vsx_isl_ports }}"
+        lag_id: "{{ vsx_isl_lagid }}"
+        lag_description: "VSX ISL"
+
+    # Uses URI module
+    - name: Create VSX configuration
+      include: tasks/aoscx/create_vsx.yml
+      vars:
+        system_mac: "{{ vsx_system_mac }}"
+        isl_lag_id: "{{ vsx_isl_lagid }}"
+        role: "{{ vsx_role }}"
+        keepalive_peer_ip: "{{ vsx_keepalive_ip_secondary if is_primary else vsx_keepalive_ip_primary }}"
+        keepalive_src_ip: "{{ vsx_keepalive_ip_primary if is_primary else vsx_keepalive_ip_secondary }}"
+
+    - name: Create VLANs
+      aoscx_vlan:
+        vlan_id: "{{ item }}"
+      with_items: "{{ server_vlans }}"
+
+    - name: Create VLAN interface
+      aoscx_vlan_interface:
+        vlan_id: "{{item.vlan_id}}"
+        ipv4: "{{item.ipv4}}"
+        active_gateway_ip: "{{item.active_gateway_ip}}"
+        active_gateway_mac_v4: "{{item.active_gateway_mac}}"
+      loop: "{{core_vlan_interfaces}}"
+
+    - name: Create Downstream MCLAG to Access
+      include: tasks/aoscx/create_lag.yml
+      vars:
+        ports: "{{ rack_dict.access_mclag_downlink_ports }}"
+        lag_id: "{{ rack_dict.mclag_id }}"
+        mclag: True
+        lag_description: "{{rack_dict.mclag_description }}"
+        lag_trunk_vlans: "{{ rack_dict.trunk_vlans}}"
+      loop: "{{rack_mclags}}"
+      loop_control:
+        loop_var: rack_dict
+
+    - name: Create Core BGP Neighbor
+      include: tasks/aoscx/bgp_neighbor.yml
+      vars:
+        bgp_asn: "{{asn}}"
+        neighbor_ip: "{{core_vsx_neighbor_ip}}"
+        ipv4_unicast: True
+        nexthopself: True
+        ebgp_hop_count: 1
+        remote_as: "{{asn}}"
+
+- hosts: access
+  gather_facts: False
+  roles:
+    - role: arubanetworks.aoscx_role
+  tasks:
+    - set_fact:
+        is_primary: "{{ vsx_role == 'primary' }}"
+
+    - name: Create VSX keepalive L3 interface
+      aoscx_l3_interface:
+        interface: "{{ vsx_keepalive_int }}"
+        description: "VSX KA"
+        ipv4: "{{ vsx_keepalive_ip_primary if is_primary else vsx_keepalive_ip_secondary}}/31"
+
+    # Uses URI module
+    - name: Create ISL LAG for VSX
+      include: tasks/aoscx/create_lag.yml
+      vars:
+        ports: "{{ vsx_isl_ports }}"
+        lag_id: "{{ vsx_isl_lagid }}"
+        lag_description: "VSX ISL"
+
+    # Uses URI module
+    - name: Create VSX configuration
+      include: tasks/aoscx/create_vsx.yml
+      vars:
+        system_mac: "{{ vsx_system_mac }}"
+        isl_lag_id: "{{ vsx_isl_lagid }}"
+        role: "{{ vsx_role }}"
+        keepalive_peer_ip: "{{ vsx_keepalive_ip_secondary if is_primary else vsx_keepalive_ip_primary }}"
+        keepalive_src_ip: "{{ vsx_keepalive_ip_primary if is_primary else vsx_keepalive_ip_secondary }}"
+
+    - name: Create VLANs
+      aoscx_vlan:
+        vlan_id: "{{ item }}"
+      with_items: "{{ server_vlans }}"
+
+    # Uses URI module
+    - name: Create Upstream MCLAG to Cores
+      include: tasks/aoscx/create_lag.yml
+      vars:
+        ports: "{{ core_mclag_uplink_ports }}"
+        lag_id: "{{ core_mclag_id }}"
+        mclag: True
+        lag_description: "{{core_mclag_description }}"
+        lag_trunk_vlans: "{{ server_vlans}}"

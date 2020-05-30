@@ -1,0 +1,73 @@
+# This task list is used to add ports as members of a LAG interface
+
+# Get the physical port's Interface table entry
+- name: Get the physical port's Interface table entry
+  uri:
+    url: "https://{{ ansible_host }}/rest/v1/system/interfaces/{{ port | replace_special_characters }}?selector=configuration"
+    method: GET
+    body_format: json
+    headers:
+      cookie: "{{ cx_session.set_cookie }}"
+    validate_certs: no
+    status_code: 200
+  register: response
+  changed_when: response.status == 200
+
+# Convert response JSON to dict
+- name: Convert response JSON to dict
+  set_fact:
+    interface_dict: "{{ response.json | to_json | json_to_dict }}"
+  no_log: False
+
+# Set admin state to 'up' in JSON
+- name: Set admin state to 'up' in JSON
+  set_fact:
+    interface_dict: "{{ interface_dict | add_admin_state_interface(True) }}"
+  no_log: False
+
+# Add LACP aggregation key to JSON
+- name: Add LACP aggregation key to JSON
+  set_fact:
+    interface_dict: "{{ interface_dict | add_lacp_key_interface(lag_id) }}"
+  no_log: False
+
+# If defined, add description to JSON
+- name: Add description to JSON
+  block:
+    - name: Add description to JSON
+      set_fact:
+        interface_dict: "{{ interface_dict | combine({'description': lag_description}) }}"
+  when: lag_description is defined
+
+# If defined, add MTU to JSON
+- name: Add MTU to JSON
+  set_fact:
+    interface_dict: "{{ interface_dict | add_mtu_interface(mtu)}}"
+  when: mtu is defined
+
+# PUT the updated JSON for the Interface table entry
+- name: PUT the updated JSON for the Interface table entry
+  uri:
+    url: "https://{{ ansible_host }}/rest/v1/system/interfaces/{{ port | replace_special_characters }}"
+    method: PUT
+    body_format: json
+    headers:
+      cookie: "{{ cx_session.set_cookie }}"
+    body: "{{ interface_dict }}"
+    validate_certs: no
+    status_code: 200
+  register: response
+  changed_when: response.status == 200
+
+# Delete Port table entry for the physical port
+- name: Delete Port table entry for the physical port
+  uri:
+    url: "https://{{ ansible_host }}/rest/v1/system/ports/{{ port | replace_special_characters }}"
+    method: DELETE
+    body_format: json
+    headers:
+      cookie: "{{ cx_session.set_cookie }}"
+    validate_certs: no
+    status_code: 204
+  register: response
+  changed_when: response.status == 204

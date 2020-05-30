@@ -1,0 +1,46 @@
+hostname {{hostname}}
+!
+!
+!
+ssh server vrf mgmt
+!
+!
+!
+!
+!
+vlan 1
+{% for rack, rack_data in rack_downlinks.items() %}
+{% for interface_data in rack_data %}
+interface {{interface_data.rack_downlink_int}}
+    no shutdown
+    description {{rack}}-Downlink
+    ip address {{interface_data.rack_downlink_ip}}/31
+{% if  mtu is defined %}
+    ip mtu {{mtu}}
+    mtu {{mtu}}
+{% endif %}
+{% endfor %}
+{% endfor %}
+interface loopback 0
+    ip address {{loopback0_ip}}/32
+router bgp {{asn}}
+    bgp router-id {{loopback0_ip}}
+    bgp fast-external-fallover
+    bgp bestpath as-path multipath-relax
+{% for rack, rack_data in rack_downlinks.items() %}
+{% for interface_data in rack_data %}
+    neighbor {{interface_data.rack_uplink_ip}} remote-as {{interface_data.rack_asn}}
+{% endfor %}
+{% endfor %}
+    address-family ipv4 unicast
+{% for rack, rack_data in rack_downlinks.items() %}
+{% for interface_data in rack_data %}
+        neighbor {{interface_data.rack_uplink_ip}} activate
+{% endfor %}
+{% endfor %}
+        redistribute connected
+        network {{loopback0_ip}}/32
+    exit-address-family
+!
+https-server rest access-mode read-write
+https-server vrf mgmt

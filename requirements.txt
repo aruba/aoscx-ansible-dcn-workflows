@@ -1,0 +1,5 @@
+Jinja2>=2.10            # ansible
+paramiko>=2.1.1         # ansible
+pip>=6.0
+requests>=2.2.0         # module_utils/aoscx.py
+netaddr>=0.7.5          # templates/2Tier/core.j2

@@ -1,0 +1,79 @@
+# This task list is used to create a lag interface
+- block:
+    # Login to AOS-CX Switch
+    - name: Login to AOS-CX Switch
+      uri:
+        url: "https://{{ ansible_host }}/rest/v1/login"
+        method: POST
+        return_content: yes
+        headers:
+          Content-Type: "application/x-www-form-urlencoded"
+          Accept: application/json
+        body: "username={{ ansible_user }}&password={{ ansible_password }}"
+        validate_certs: no
+        status_code: 200
+        follow_redirects: yes
+      register: cx_session
+
+    # Add ports as LAG members
+    - name: Add ports as LAG members
+      include: add_lag_members.yml port={{ loop_ports }} lag_id={{lag_id}}
+      loop: "{{ ports }}"
+      loop_control:
+        loop_var: loop_ports
+
+    # Set up body for the subsequent POST call
+    - name: Set up body for POST call
+      set_fact:
+        post_body: {"admin": "up",
+               "interfaces": "{{ ports | map_ports_to_uris }}",
+               "name": "lag{{ lag_id }}",
+               "description": "{{ lag_description }}",
+               "routing": False,
+               "lacp": "active",
+               "vlan_mode": "native-tagged",
+               "vlan_tag": "/rest/v1/system/vlans/1"
+               }
+
+    # If defined, add trunk_vlans to JSON
+    - name: Add trunked VLANs to JSON
+      block:
+        - set_fact:
+            vlan_trunks_dict: "{{ lag_trunk_vlans | map_vlans_to_uris }}"
+
+        - name: Add trunked VLANs to JSON
+          set_fact:
+            post_body: "{{ post_body | combine({'vlan_trunks': vlan_trunks_dict}) }}"
+      when: lag_trunk_vlans is defined
+
+    # If mclag field is True, add boolean to the JSON to make it an MCLAG
+    - name: Set MCLAG field as True in JSON
+      set_fact:
+        post_body: "{{ post_body | combine({'other_config': {'mclag_enabled': True}}) }}"
+      when: mclag|default(False) == True
+
+    # Create Port table entry for LAG
+    - name: Create Port table entry for LAG {{ lag_id | mandatory }}
+      uri:
+        url: "https://{{ ansible_host }}/rest/v1/system/ports"
+        method: POST
+        body_format: json
+        headers:
+          cookie: "{{ cx_session.set_cookie }}"
+        body: "{{ post_body }}"
+        validate_certs: no
+        status_code: 201
+      register: response
+      changed_when: response.status == 201
+
+  always:
+    # Logout from AOS-CX Switch
+    - name: Logout from AOS-CX Switch
+      uri:
+        url: 'https://{{ ansible_host }}/rest/v1/logout'
+        method: POST
+        body_format: json
+        headers:
+          cookie: "{{ cx_session.set_cookie }}"
+        validate_certs: no
+        status_code: 200

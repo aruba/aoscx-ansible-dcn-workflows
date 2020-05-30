@@ -1,0 +1,9 @@
+# This task list is used to add list of IP address as BGP Neighbors
+- name:
+  include: tasks/aoscx/bgp_neighbor.yml
+  vars:
+    neighbor_ip: "{{ loop_neighbors }}"
+    remote_as: "{{ bgp_neighbors_asn | int }}"
+  loop: "{{ bgp_neighbors }}"
+  loop_control:
+    loop_var: loop_neighbors

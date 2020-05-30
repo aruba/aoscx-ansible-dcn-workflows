@@ -1,0 +1,28 @@
+- hosts: all
+  gather_facts: False
+  roles:
+    - role: arubanetworks.aoscx_role
+  vars:
+    mclag_id: 12
+    mclag_vlans:
+      - 11
+      - 12
+    mclag_ports:
+      - 1/1/2
+      - 1/1/4
+    mclag_description: MCLAG_12
+  tasks:
+    - name: Create VLANs {{mclag_vlans}}
+      aoscx_vlan:
+        vlan_id: "{{ item }}"
+      with_items: "{{ mclag_vlans }}"
+
+    # Uses URI module
+    - name: Create MCLAG and trunk VLANs
+      include: tasks/aoscx/create_lag.yml
+      vars:
+        ports: "{{ mclag_ports }}"
+        lag_id: "{{ mclag_id }}"
+        mclag: True
+        lag_description: "{{ mclag_description }}"
+        lag_trunk_vlans: "{{ mclag_vlans}}"

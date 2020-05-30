@@ -1,0 +1,41 @@
+- hosts: all
+  gather_facts: False
+  roles:
+    - role: arubanetworks.aoscx_role
+  vars:
+    vsx_role: primary
+    vsx_keepalive_int: 1/1/32
+    vsx_keepalive_ip_primary: 192.168.1.110
+    vsx_keepalive_ip_secondary: 192.168.1.111
+    vsx_system_mac: 00:00:00:00:01:11
+    vsx_isl_lagid: 1
+    vsx_isl_ports:
+      - 1/1/10
+      - 1/1/11
+  tasks:
+    - set_fact:
+        is_primary: "{{ vsx_role == 'primary' }}"
+
+    - name: Create VSX keepalive L3 interface
+      aoscx_l3_interface:
+        interface: "{{ vsx_keepalive_int }}"
+        description: "VSX KA"
+        ipv4: "{{ vsx_keepalive_ip_primary if is_primary else vsx_keepalive_ip_secondary}}/31"
+
+    # Uses URI module
+    - name: Create ISL LAG for VSX
+      include: tasks/aoscx/create_lag.yml
+      vars:
+        ports: "{{ vsx_isl_ports }}"
+        lag_id: "{{ vsx_isl_lagid }}"
+        lag_description: "VSX ISL"
+
+    # Uses URI module
+    - name: Create VSX configuration
+      include: tasks/aoscx/create_vsx.yml
+      vars:
+        system_mac: "{{ vsx_system_mac }}"
+        isl_lag_id: "{{ vsx_isl_lagid }}"
+        role: "{{ vsx_role }}"
+        keepalive_peer_ip: "{{ vsx_keepalive_ip_secondary if is_primary else vsx_keepalive_ip_primary }}"
+        keepalive_src_ip: "{{ vsx_keepalive_ip_primary if is_primary else vsx_keepalive_ip_secondary }}"
