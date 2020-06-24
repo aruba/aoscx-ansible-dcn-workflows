@@ -36,7 +36,7 @@ interface {{interface}}
 {% endif %}
     lag {{vsx_isl_lagid}}
 {% endfor %}
-{% for int_data in rack_L3fabric_ips %}
+{% for int_data in vsx_pair_L3fabric_ips %}
 interface {{int_data.interface}}
     no shutdown
 {% if mtu is defined %}

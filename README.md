@@ -47,9 +47,9 @@ This project contains multiple inventories, each corresponding to a specific wor
   
 #### Making The Inventory Your Own
 Each inventory provided is made to be an example. You are encouraged to change IP addressing and interface values to match your environment. 
-Note that these inventories use a logical grouping method of "racks" which assumes that each VSX pair of access/leaf switches is in its own rack. 
-These "racks" don't actually have to be physically installed in the same rack; this is just one approach to coupling VSX pairs. 
-You can change the "rack<#/Abc>" nomenclature to your liking as long as you keep the names consistent throughout the inventory.  
+Note that these inventories use a logical grouping method of to group VSX Pairs and assumes that each VSX pair of access/leaf switches is in a group. 
+The names of these groups can be any alphanumeric name; this is just one approach to coupling VSX pairs. 
+You can change the "rack#" nomenclature in the example inventory files to your liking as long as you keep the names consistent throughout the inventory.  
   
 All the variables in the inventory files are necessary for the workflows to run. There are three broad categories of variables:
 1. Some variables are static, such as the AOS-CX Ansible connection variables. These variables maintain constant values that should not be changed.
@@ -129,7 +129,7 @@ This workflow provisions a campus attached data center set of top of rack AOS-CX
   1. Create all VLANs defined as `server_vlans` in the [inventory](https://github.com/aruba/aoscx-ansible-dcn-workflows/blob/master/inventory_2tier_dedicated_dc.yml#L25)
   1. Create SVIs for all VLANs defined as `core_vlan_interfaces` in the [inventory](https://github.com/aruba/aoscx-ansible-dcn-workflows/blob/master/inventory_2tier_dedicated_dc.yml#L105-L109)
   1. Configure the multi-chassis LAGs that connect to each access switch and trunk the VLANs in [`trunk_vlans`](https://github.com/aruba/aoscx-ansible-dcn-workflows/blob/master/inventory_2tier_dedicated_dc.yml#L90).
-     * **Note:** `rack_mclags` is a list of 'rack' information for the core devices to use for configuring downlink interfaces. You should modify these values appropriately to match your environment.
+     * **Note:** `vsx_pair_mclags` is a list of VSX Pair (rack# grouping) information for the core devices to use for configuring downlink interfaces. You should modify these values appropriately to match your environment.
   
   1. Configure BGP neighbor for iBGP peering between the core switches    
 
@@ -183,7 +183,7 @@ using **REST API**:
   1. Create all VLANs defined as `server_vlans` in the [inventory](https://github.com/aruba/aoscx-ansible-dcn-workflows/blob/master/inventory_2tier_dedicated_dc.yml#L25)
   1. Create SVIs for all VLANs defined as `core_vlan_interfaces` in the [inventory](https://github.com/aruba/aoscx-ansible-dcn-workflows/blob/master/inventory_2tier_dedicated_dc.yml#L105-L109)
   1. Configure the multi-chassis LAGs that connect to each access switch and trunk the VLANs in [`trunk_vlans`](https://github.com/aruba/aoscx-ansible-dcn-workflows/blob/master/inventory_2tier_dedicated_dc.yml#L90).
-     * **Note:** `rack_mclags` is a list of 'rack' information for the core devices to use for configuring downlink interfaces. You should modify these values appropriately to match your environment.
+     * **Note:** `vsx_pair_mclags` is a list of VSX Pair (rack# grouping) information for the core devices to use for configuring downlink interfaces. You should modify these values appropriately to match your environment.
     
   1. Configure BGP neighbor for iBGP peering between the core switches  
   

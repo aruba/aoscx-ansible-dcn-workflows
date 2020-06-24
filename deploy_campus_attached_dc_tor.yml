@@ -1,4 +1,4 @@
-- hosts: core
+- hosts: dc_tor
   gather_facts: False
   roles:
     - role: arubanetworks.aoscx_role
@@ -29,7 +29,7 @@
           commands: ['no auto-confirm']
       when: speed_interface_group_10g is defined
 
-- hosts: core
+- hosts: dc_tor
   gather_facts: False
   roles:
     - role: arubanetworks.aoscx_role
@@ -77,14 +77,14 @@
     - name: Create Downstream MCLAG to Access
       include: tasks/aoscx/create_lag.yml
       vars:
-        ports: "{{ rack_dict.access_mclag_downlink_ports }}"
-        lag_id: "{{ rack_dict.mclag_id }}"
+        ports: "{{ vsx_pair_dict.access_mclag_downlink_ports }}"
+        lag_id: "{{ vsx_pair_dict.mclag_id }}"
         mclag: True
-        lag_description: "{{rack_dict.mclag_description }}"
-        lag_trunk_vlans: "{{ rack_dict.trunk_vlans}}"
-      loop: "{{rack_mclags}}"
+        lag_description: "{{vsx_pair_dict.mclag_description }}"
+        lag_trunk_vlans: "{{ vsx_pair_dict.trunk_vlans}}"
+      loop: "{{vsx_pair_mclags}}"
       loop_control:
-        loop_var: rack_dict
+        loop_var: vsx_pair_dict
 
     - name: Create Core BGP Neighbor
       include: tasks/aoscx/bgp_neighbor.yml

@@ -9,12 +9,12 @@ ssh server vrf mgmt
 !
 !
 vlan 1
-{% for rack, rack_data in rack_downlinks.items() %}
-{% for interface_data in rack_data %}
-interface {{interface_data.rack_downlink_int}}
+{% for vsx_pair, vsx_pair_data in vsx_pair_downlinks.items() %}
+{% for interface_data in vsx_pair_data %}
+interface {{interface_data.vsx_pair_downlink_int}}
     no shutdown
-    description {{rack}}-Downlink
-    ip address {{interface_data.rack_downlink_ip}}/31
+    description {{vsx_pair}}-Downlink
+    ip address {{interface_data.vsx_pair_downlink_ip}}/31
 {% if  mtu is defined %}
     ip mtu {{mtu}}
     mtu {{mtu}}
@@ -27,15 +27,15 @@ router bgp {{asn}}
     bgp router-id {{loopback0_ip}}
     bgp fast-external-fallover
     bgp bestpath as-path multipath-relax
-{% for rack, rack_data in rack_downlinks.items() %}
-{% for interface_data in rack_data %}
-    neighbor {{interface_data.rack_uplink_ip}} remote-as {{interface_data.rack_asn}}
+{% for vsx_pair, vsx_pair_data in vsx_pair_downlinks.items() %}
+{% for interface_data in vsx_pair_data %}
+    neighbor {{interface_data.vsx_pair_uplink_ip}} remote-as {{interface_data.vsx_pair_asn}}
 {% endfor %}
 {% endfor %}
     address-family ipv4 unicast
-{% for rack, rack_data in rack_downlinks.items() %}
-{% for interface_data in rack_data %}
-        neighbor {{interface_data.rack_uplink_ip}} activate
+{% for vsx_pair, vsx_pair_data in vsx_pair_downlinks.items() %}
+{% for interface_data in vsx_pair_data %}
+        neighbor {{interface_data.vsx_pair_uplink_ip}} activate
 {% endfor %}
 {% endfor %}
         redistribute connected

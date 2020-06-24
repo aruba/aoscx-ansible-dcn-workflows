@@ -38,12 +38,12 @@
       vars:
         bgp_asn: "{{asn}}"
         bgp_neighbors: "{{item.loopback_ips}}"
-        bgp_neighbors_asn: "{{item.rack_asn|int}}"
+        bgp_neighbors_asn: "{{item.vsx_pair_asn|int}}"
         ebgp_hop_count: 3
         nexthopunchanged: True
         l2_evpn: True
         send_community_l2_evpn: extended
-      loop: "{{racks}}"
+      loop: "{{vsx_pairs}}"
 
 - hosts: leaf
   roles:
@@ -59,7 +59,7 @@
         nexthopunchanged: True
         l2_evpn: True
         send_community_l2_evpn: extended
-        bgp_asn: "{{rack_asn}}"
+        bgp_asn: "{{vsx_pair_asn}}"
       loop: "{{spine_loopback0_ips}}"
 
     - name: Create Server VLANs

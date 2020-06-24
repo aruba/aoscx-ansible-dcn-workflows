@@ -33,9 +33,9 @@ all:
             vsx_isl_lagid: 1
           children:
             access:
-              # Access devices are grouped by "rack" location to group VSX pairs,
-              # names of racks can be anything alphanumeric
-              # devices do not have to be physically in the same "rack"
+              # Access devices are grouped by VSX pairs,
+              # names of VSX pairs can be anything alphanumeric
+              # each VSX group is a subgroup of 'access'
               children:
                 rack1:
                   vars:
@@ -81,8 +81,8 @@ all:
                 vsx_system_mac: 00:00:00:00:01:01
                 vsx_keepalive_ip_primary: 192.168.1.100
                 vsx_keepalive_ip_secondary: 192.168.1.101
-                # Core MCLAG information for downlinks to each rack and each access switch
-                rack_mclags:
+                # Core MCLAG information for downlinks to each VSX pair and each access switch
+                vsx_pair_mclags:
                   - location: rack1
                     access_mclag_downlink_ports: ['1/1/27', '1/1/28'] # Interfaces that will be a part of the MCLAG connecting the core devices to access
                     mclag_id: 11

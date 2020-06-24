@@ -43,7 +43,7 @@
         routereflectorclient: True
         l2_evpn: True
         send_community_l2_evpn: extended
-      loop: "{{racks}}"
+      loop: "{{vsx_pairs}}"
 
 - hosts: leaf
   roles:

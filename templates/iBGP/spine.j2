@@ -12,16 +12,16 @@ router ospf 1
     router-id {{loopback0_ip}}
     area {{ospf_area}}
 vlan 1
-{% for rack, rack_data in rack_downlinks.items() %}
-{% for interface_data in rack_data %}
-interface {{interface_data.rack_downlink_int}}
+{% for vsx_pair, vsx_pair_data in vsx_pair_downlinks.items() %}
+{% for interface_data in vsx_pair_data %}
+interface {{interface_data.vsx_pair_downlink_int}}
     no shutdown
 {% if  mtu is defined %}
     ip mtu {{mtu}}
     mtu {{mtu}}
 {% endif %}
-    description {{rack}}-Downlink
-    ip address {{interface_data.rack_downlink_ip}}/31
+    description {{vsx_pair}}-Downlink
+    ip address {{interface_data.vsx_pair_downlink_ip}}/31
     ip ospf 1 area {{ospf_area}}
     ip ospf network point-to-point
 {% endfor %}
