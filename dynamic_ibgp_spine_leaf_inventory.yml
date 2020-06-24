@@ -1,0 +1,4 @@
+---
+plugin: aoscx_dcn_plugin           # Name of the plugin
+path_to_inventory: ./files # Directory location of CSV
+excel_file: dedicated_spine_leaf_ibgp_DCN_Settings.xlsx

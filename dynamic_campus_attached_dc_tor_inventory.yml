@@ -1,0 +1,4 @@
+---
+plugin: aoscx_dcn_plugin           # Name of the plugin
+path_to_inventory: ./files # Directory location of Excel
+excel_file: campus_attached_dcToR_DCN_Settings.xlsx # Name of Excel File

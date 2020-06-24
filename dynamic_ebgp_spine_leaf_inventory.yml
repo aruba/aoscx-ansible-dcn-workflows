@@ -1,0 +1,4 @@
+---
+plugin: aoscx_dcn_plugin           # Name of the plugin
+path_to_inventory: ./files # Directory location of Excel
+excel_file: dedicated_spine_leaf_ebgp_DCN_Settings.xlsx # Name of Excel
