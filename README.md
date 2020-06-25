@@ -79,11 +79,11 @@ which Excel file corresponds to which workflow is described in the [Workflows](h
 Cells in the Excel file that are protected are used by the 
 [aoscx_dcn_plugin](https://github.com/aruba/aoscx-ansible-dcn-workflows/blob/master/inventory_plugins/aoscx_dcn_plugin.py) to generate/populate variables to be later used in the playbooks, cells that have sample data are for you to 
 change/modify to make your own. In the event that it's required to unprotect the sheets in the workbook, use the password **aruba** to unlock the sheets.  
-Cells you **should not** change:  
+* Cells you **should not** change:  
 ![Protected Cells](https://github.com/aruba/aoscx-ansible-dcn-workflows/blob/master/files/images/protected_cells1.PNG?raw=true)
 ![Protected Cells](https://github.com/aruba/aoscx-ansible-dcn-workflows/blob/master/files/images/protected_cells2.PNG?raw=true)  
   
-Cells you **should** change:  
+* Cells you **should** change:  
 ![Value Cells](https://github.com/aruba/aoscx-ansible-dcn-workflows/blob/master/files/images/value_cells1.PNG?raw=true)
 ![Value Cells](https://github.com/aruba/aoscx-ansible-dcn-workflows/blob/master/files/images/value_cells2.PNG?raw=true)  
 
