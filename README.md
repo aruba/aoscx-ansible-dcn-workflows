@@ -43,14 +43,57 @@ For more information on how to use the `aoscx_role` visit our [Github](https://g
 `$ pip install -r requirements.txt`
 
 ### Inventory Setup
-This project contains multiple inventories, each corresponding to a specific workflow. Which inventory files correspond to which workflows is described in the [Workflows](https://github.com/aruba/aoscx-ansible-dcn-workflows#workflows) section of this document.
+This project contains multiple inventories, each corresponding to a specific workflow. Which inventory files correspond to which workflows is described in the [Workflows](https://github.com/aruba/aoscx-ansible-dcn-workflows#workflows) section of this document. 
+
+#### AOS-CX DCN Inventory Plugin
+Typically users use YAML or INI formatted files to define their Ansible inventory and in this project we have multiple YAML inventory files that correspond to specific workflows. 
+Also in this project you'll find an [Ansible inventory plugin](https://docs.ansible.com/ansible/latest/plugins/inventory.html), an inventory plugin allows you to specify a data source as your source for dynamically generating your inventory 
+before executing each playbook. We've created the AOS-CX Data Center inventory plugin [`inventory_plugins/aoscx_dcn_plugin.py`](https://github.com/aruba/aoscx-ansible-dcn-workflows/blob/master/inventory_plugins/aoscx_dcn_plugin.py) 
+which allows users to input data into an Excel file that Ansible will then use to configure devices.  
+
+Each workflow has a specific Excel template that it uses to generate Ansible values, the Excel files found in [files/](https://github.com/aruba/aoscx-ansible-dcn-workflows/tree/master/files) can be modified/renamed to match 
+ your environment and specifications. Once your Excel file is defined, you simply need to specify the [aoscx_dcn_plugin](https://github.com/aruba/aoscx-ansible-dcn-workflows/blob/master/inventory_plugins/aoscx_dcn_plugin.py), the 
+ directory containing the Excel file, and the name of the Excel file you want to use in your Ansible YAML inventory file like so:  
+```yaml
+plugin: aoscx_dcn_plugin           # Name of the plugin
+path_to_inventory: ./files # Directory location of Excel
+excel_file: dedicated_two_tier_DCN_Settings.xlsx # Name of the Excel
+``` 
+ 
+Using this inventory plugin in an inventory file with a playbook is exactly the same, just provide the YAML file with the `-i` option:  
+`ansible-playbook deploy_2tier_dedicated_datacenter.yml -i dynamic_2tier_dedicated_dc_inventory.yml`
   
 #### Making The Inventory Your Own
+In this project we have the option of using either the YAML inventory file to define your environment through variables **or** use the 
+[aoscx_dcn_plugin](https://github.com/aruba/aoscx-ansible-dcn-workflows/blob/master/inventory_plugins/aoscx_dcn_plugin.py) in combination with an Excel template. 
+Either approach works with the provided playbooks, but you should use one or the other.  
+  
 Each inventory provided is made to be an example. You are encouraged to change IP addressing and interface values to match your environment. 
 Note that these inventories use a logical grouping method of to group VSX Pairs and assumes that each VSX pair of access/leaf switches is in a group. 
 The names of these groups can be any alphanumeric name; this is just one approach to coupling VSX pairs. 
 You can change the "rack#" nomenclature in the example inventory files to your liking as long as you keep the names consistent throughout the inventory.  
+
+#### aoscx_dcn_plugin + Excel Templates
+Each workflow has an Excel template to use in [files/](https://github.com/aruba/aoscx-ansible-dcn-workflows/tree/master/files), 
+which Excel file corresponds to which workflow is described in the [Workflows](https://github.com/aruba/aoscx-ansible-dcn-workflows#workflows) section of this document. 
+Cells in the Excel file that are protected are used by the 
+[aoscx_dcn_plugin](https://github.com/aruba/aoscx-ansible-dcn-workflows/blob/master/inventory_plugins/aoscx_dcn_plugin.py) to generate/populate variables to be later used in the playbooks, cells that have sample data are for you to 
+change/modify to make your own. In the event that it's required to unprotect the sheets in the workbook, use the password **aruba** to unlock the sheets.  
+Cells you **should not** change:  
+![Protected Cells](https://github.com/aruba/aoscx-ansible-dcn-workflows/blob/master/files/images/protected_cells1.PNG?raw=true)
+![Protected Cells](https://github.com/aruba/aoscx-ansible-dcn-workflows/blob/master/files/images/protected_cells2.PNG?raw=true)  
   
+Cells you **should** change:  
+![Value Cells](https://github.com/aruba/aoscx-ansible-dcn-workflows/blob/master/files/images/value_cells1.PNG?raw=true)
+![Value Cells](https://github.com/aruba/aoscx-ansible-dcn-workflows/blob/master/files/images/value_cells2.PNG?raw=true)  
+
+  
+In addition to populating variables used in Ansible, this plugin will also dynamically generate IP addressing for Loopback Addresses and Fabric Addresses (where applicable) based on values entered in the Network sheet of the Excel template. 
+If you'd like to specify device's interface loopback0 IP address, specify a value for the device's Loopback Interface 0 IP Address cell and enter the value "N/A" for Loopback Addresses in the Network sheet. 
+If you'd like to specify the fabric addressing for the Spine Leaf workflows, it's recommended to use the YAML inventory file method instead of the Excel template.
+
+
+#### YAML Inventory File  
 All the variables in the inventory files are necessary for the workflows to run. There are three broad categories of variables:
 1. Some variables are static, such as the AOS-CX Ansible connection variables. These variables maintain constant values that should not be changed.
 1. Some variables' values necessarily must be changed to match device information for your specific environment.
@@ -97,8 +140,10 @@ This workflow provisions a campus attached data center set of top of rack AOS-CX
 
 #### Workflow Prerequisites
 - All prerequisites defined above in [Prerequisites](https://github.com/aruba/aoscx-ansible-dcn-workflows#prerequisites)
-- Ensure the provided Ansible inventory file [inventory_2tier_dedicated_dc.yml](https://github.com/aruba/aoscx-ansible-dcn-workflows/blob/master/inventory_2tier_dedicated_dc.yml)
- has been modified to suit your environment, according to the instructions in [Inventory Setup](https://github.com/aruba/aoscx-ansible-dcn-workflows#inventory-setup) above.
+- Ensure the provided Ansible inventory file has been modified to suit your environment, according to the instructions in [Inventory Setup](https://github.com/aruba/aoscx-ansible-dcn-workflows#inventory-setup) above:  
+  - YAML Inventory File : [inventory_2tier_dedicated_dc.yml](https://github.com/aruba/aoscx-ansible-dcn-workflows/blob/master/inventory_2tier_dedicated_dc.yml)  
+  - Excel Template File : [campus_attached_dcToR_DCN_Settings.xlsx](https://github.com/aruba/aoscx-ansible-dcn-workflows/blob/master/files/campus_attached_dcToR_DCN_Settings.xlsx)
+    - Example inventory using aoscx_dcn_plugin : [dynamic_campus_attached_dc_tor_inventory.yml](https://github.com/aruba/aoscx-ansible-dcn-workflows/blob/master/dynamic_campus_attached_dc_tor_inventory.yml)
 - L3 Campus Core
 - DC Core switches = 2 AOS-CX switches (8xxx series, use latest firmware available)
   - DC Core switches should be in a VSX pair
@@ -109,9 +154,11 @@ This workflow provisions a campus attached data center set of top of rack AOS-CX
  
 #### Files Used
 * Playbook : [deploy_campus_attached_dc_tor.yml](https://github.com/aruba/aoscx-ansible-dcn-workflows/blob/master/deploy_campus_attached_dc_tor.yml)  
-* Inventory : [inventory_2tier_dedicated_dc.yml](https://github.com/aruba/aoscx-ansible-dcn-workflows/blob/master/inventory_2tier_dedicated_dc.yml)  
-  * ***Note:** This inventory file is also used for the Architecture II workflow, so it contains additional information for access switches (Zone1-Rack<1/3>-Access<1/2/3/4>). 
-  Valid values for variables relating to those devices are not necessary for this workflow.*
+* Inventory : 
+  * YAML Inventory File : [inventory_2tier_dedicated_dc.yml](https://github.com/aruba/aoscx-ansible-dcn-workflows/blob/master/inventory_2tier_dedicated_dc.yml)
+    * ***Note:** This inventory file is also used for the Architecture II workflow, so it contains additional information for access switches (Zone1-Rack<1/3>-Access<1/2/3/4>). 
+    Valid values for variables relating to those devices are not necessary for this workflow.*  
+  * Excel Template File : [campus_attached_dcToR_DCN_Settings.xlsx](https://github.com/aruba/aoscx-ansible-dcn-workflows/blob/master/files/campus_attached_dcToR_DCN_Settings.xlsx)  
 * Jinja2 Templates : [templates/2Tier/core.j2](https://github.com/aruba/aoscx-ansible-dcn-workflows/blob/master/templates/2Tier/core.j2)  
 
 
@@ -145,8 +192,10 @@ This workflow provisions a VSX pair of switches acting as a centralized collapse
 
 #### Workflow Prerequisites
 - All prerequisites defined above in [Prerequisites](https://github.com/aruba/aoscx-ansible-dcn-workflows#prerequisites)
-- Ensure the provided Ansible inventory file [inventory_2tier_dedicated_dc.yml](https://github.com/aruba/aoscx-ansible-dcn-workflows/blob/master/inventory_2tier_dedicated_dc.yml)
- has been modified to suit your environment, according to the instructions in [Inventory Setup](https://github.com/aruba/aoscx-ansible-dcn-workflows#inventory-setup) above.
+- Ensure the provided Ansible inventory file has been modified to suit your environment, according to the instructions in [Inventory Setup](https://github.com/aruba/aoscx-ansible-dcn-workflows#inventory-setup) above:  
+  - YAML Inventory File : [inventory_2tier_dedicated_dc.yml](https://github.com/aruba/aoscx-ansible-dcn-workflows/blob/master/inventory_2tier_dedicated_dc.yml)  
+  - Excel Template File : [dedicated_two_tier_DCN_Settings.xlsx](https://github.com/aruba/aoscx-ansible-dcn-workflows/blob/master/files/dedicated_two_tier_DCN_Settings.xlsx)
+    - Example inventory using aoscx_dcn_plugin : [dynamic_2tier_dedicated_dc_inventory.yml](https://github.com/aruba/aoscx-ansible-dcn-workflows/blob/master/dynamic_2tier_dedicated_dc_inventory.yml)
 - DC Core switches = 2 AOS-CX switches (8xxx series, use latest firmware available)
   - DC Core switches should be in a VSX pair
 - Access switches = 4 or more AOS-CX switches (8xxx series, use latest firmware available)
@@ -157,7 +206,10 @@ This workflow provisions a VSX pair of switches acting as a centralized collapse
  
 #### Files Used
 * Playbook : [deploy_2tier_dedicated_datacenter.yml](https://github.com/aruba/aoscx-ansible-dcn-workflows/blob/master/deploy_2tier_dedicated_datacenter.yml)  
-* Inventory : [inventory_2tier_dedicated_dc.yml](https://github.com/aruba/aoscx-ansible-dcn-workflows/blob/master/inventory_2tier_dedicated_dc.yml)  
+* Inventory : 
+  * YAML Inventory File : [inventory_2tier_dedicated_dc.yml](https://github.com/aruba/aoscx-ansible-dcn-workflows/blob/master/inventory_2tier_dedicated_dc.yml)  
+  * Excel Template File : [dedicated_two_tier_DCN_Settings.xlsx](https://github.com/aruba/aoscx-ansible-dcn-workflows/blob/master/files/dedicated_two_tier_DCN_Settings.xlsx)
+    * Example inventory using aoscx_dcn_plugin : [dynamic_2tier_dedicated_dc_inventory.yml](https://github.com/aruba/aoscx-ansible-dcn-workflows/blob/master/dynamic_2tier_dedicated_dc_inventory.yml)  
 * Jinja2 Templates :
   * [templates/2Tier/access.j2](https://github.com/aruba/aoscx-ansible-dcn-workflows/blob/master/templates/2Tier/access.j2)  
   * [templates/2Tier/core.j2](https://github.com/aruba/aoscx-ansible-dcn-workflows/blob/master/templates/2Tier/core.j2)
@@ -208,8 +260,10 @@ This workflow **does not** configure the centralized L3 gateway.
   
 #### Workflow Prerequisites
 - All prerequisites defined above in [Prerequisites](https://github.com/aruba/aoscx-ansible-dcn-workflows#prerequisites)
-- Ensure the provided Ansible inventory file [inventory_spine_leaf.yml](https://github.com/aruba/aoscx-ansible-dcn-workflows/blob/master/inventory_spine_leaf.yml)
- matches your environment, see [How to Setup Your Inventory](https://github.com/aruba/aoscx-ansible-dcn-workflows#how-to-setup-your-inventory) above.
+- Ensure the provided Ansible inventory file has been modified to suit your environment, according to the instructions in [Inventory Setup](https://github.com/aruba/aoscx-ansible-dcn-workflows#inventory-setup) above:  
+  - YAML Inventory File : [inventory_spine_leaf.yml](https://github.com/aruba/aoscx-ansible-dcn-workflows/blob/master/inventory_spine_leaf.yml)  
+  - Excel Template File : [dedicated_spine_leaf_ebgp_DCN_Settings.xlsx](https://github.com/aruba/aoscx-ansible-dcn-workflows/blob/master/files/dedicated_spine_leaf_ebgp_DCN_Settings.xlsx)
+    - Example inventory using aoscx_dcn_plugin : [dynamic_ebgp_spine_leaf_inventory.yml](https://github.com/aruba/aoscx-ansible-dcn-workflows/blob/master/dynamic_ebgp_spine_leaf_inventory.yml)
 - Spine switches = 2 AOS-CX switches  
   - spine switches should be in a VSX pair and **must support EVPN** (8325/8400 required)
 - Leaf switches = 4 or more AOS-CX switches
@@ -220,7 +274,10 @@ This workflow **does not** configure the centralized L3 gateway.
 
 #### Files Used
 * Playbook : [deploy_ebgp_evpn_vxlan.yml](https://github.com/aruba/aoscx-ansible-dcn-workflows/blob/master/deploy_ebgp_evpn_vxlan.yml)  
-* Inventory : [inventory_spine_leaf.yml](https://github.com/aruba/aoscx-ansible-dcn-workflows/blob/master/inventory_spine_leaf.yml)  
+* Inventory :  
+  * YAML Inventory File : [inventory_spine_leaf.yml](https://github.com/aruba/aoscx-ansible-dcn-workflows/blob/master/inventory_spine_leaf.yml)  
+  * Excel Template File : [dedicated_spine_leaf_ebgp_DCN_Settings.xlsx](https://github.com/aruba/aoscx-ansible-dcn-workflows/blob/master/files/dedicated_spine_leaf_ebgp_DCN_Settings.xlsx)
+    * Example inventory using aoscx_dcn_plugin : [dynamic_ebgp_spine_leaf_inventory.yml](https://github.com/aruba/aoscx-ansible-dcn-workflows/blob/master/dynamic_ebgp_spine_leaf_inventory.yml)  
 * Jinja2 Templates :
   * [templates/eBGP/spine.j2](https://github.com/aruba/aoscx-ansible-dcn-workflows/blob/master/templates/eBGP/spine.j2)  
   * [templates/eBGP/leaf.j2](https://github.com/aruba/aoscx-ansible-dcn-workflows/blob/master/templates/eBGP/leaf.j2)
@@ -260,8 +317,10 @@ based on the [validated reference design](https://community.arubanetworks.com/t5
   
 #### Workflow Prerequisites
 - All prerequisites defined above in [Prerequisites](https://github.com/aruba/aoscx-ansible-dcn-workflows#prerequisites)
-- Ensure the provided Ansible inventory file [inventory_spine_leaf.yml](https://github.com/aruba/aoscx-ansible-dcn-workflows/blob/master/inventory_spine_leaf.yml)
- matches your environment, see [How to Setup Your Inventory](https://github.com/aruba/aoscx-ansible-dcn-workflows#how-to-setup-your-inventory) above.
+- Ensure the provided Ansible inventory file has been modified to suit your environment, according to the instructions in [Inventory Setup](https://github.com/aruba/aoscx-ansible-dcn-workflows#inventory-setup) above:  
+  - YAML Inventory File : [inventory_spine_leaf.yml](https://github.com/aruba/aoscx-ansible-dcn-workflows/blob/master/inventory_spine_leaf.yml)  
+  - Excel Template File : [dedicated_spine_leaf_ibgp_DCN_Settings.xlsx](https://github.com/aruba/aoscx-ansible-dcn-workflows/blob/master/files/dedicated_spine_leaf_ibgp_DCN_Settings.xlsx)
+    - Example inventory using aoscx_dcn_plugin : [dynamic_ibgp_spine_leaf_inventory.yml](https://github.com/aruba/aoscx-ansible-dcn-workflows/blob/master/dynamic_ibgp_spine_leaf_inventory.yml)
 - Spine switches = 2 AOS-CX switches 
   - spine switches should be in a VSX pair and **must support EVPN** (8325/8400 required)
 - Leaf switches = 4 or more AOS-CX switches
@@ -271,7 +330,10 @@ based on the [validated reference design](https://community.arubanetworks.com/t5
 
 #### Files Used
 * Playbook : [deploy_ibgp_evpn_vxlan.yml](https://github.com/aruba/aoscx-ansible-dcn-workflows/blob/master/deploy_ibgp_evpn_vxlan.yml)  
-* Inventory : [inventory_spine_leaf.yml](https://github.com/aruba/aoscx-ansible-dcn-workflows/blob/master/inventory_spine_leaf.yml)  
+* Inventory :   
+  * YAML Inventory File : [inventory_spine_leaf.yml](https://github.com/aruba/aoscx-ansible-dcn-workflows/blob/master/inventory_spine_leaf.yml)  
+  * Excel Template File : [dedicated_spine_leaf_ibgp_DCN_Settings.xlsx](https://github.com/aruba/aoscx-ansible-dcn-workflows/blob/master/files/dedicated_spine_leaf_ibgp_DCN_Settings.xlsx)
+    * Example inventory using aoscx_dcn_plugin : [dynamic_ibgp_spine_leaf_inventory.yml](https://github.com/aruba/aoscx-ansible-dcn-workflows/blob/master/dynamic_ibgp_spine_leaf_inventory.yml)
 * Jinja2 Templates :
   * [templates/iBGP/spine.j2](https://github.com/aruba/aoscx-ansible-dcn-workflows/blob/master/templates/iBGP/spine.j2)  
   * [templates/iBGP/leaf.j2](https://github.com/aruba/aoscx-ansible-dcn-workflows/blob/master/templates/iBGP/leaf.j2)
