@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 # aoscx_dcn_plugin.py
 
 from __future__ import (absolute_import, division, print_function)
