@@ -107,11 +107,13 @@ accepted.
 
 | Resource | Description |
 | --- | --- |
+| [Aruba Developer Hub][devhub-link] | Aruba Developer Hub that showcases all automated solutions for Aruba products. |
 | [Airheads Developer Community][airheads-link] | Aruba Airheads forum to discuss all things network automation. |
 | [Aruba Bots Automate Videos][aruba-bots-playlist-link]| YouTube playlist containing instructional videos for Ansible and Python automation repositories. |
 | [aruba-automation@hpe.com][email-link] | Distribution list email to contact the Aruba Automation Technical Marketing Engineering team. |
 
 
+[devhub-link]: https://developer.arubanetworks.com/
 [airheads-link]: https://community.arubanetworks.com/t5/Developer-Community/bd-p/DeveloperCommunity
 [aruba-bots-playlist-link]: https://www.youtube.com/playlist?list=PLsYGHuNuBZcY02FUh95ZpOB5VFkPurVaX
 [email-link]: mailto:aruba-automation@hpe.com
