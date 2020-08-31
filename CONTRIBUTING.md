@@ -109,9 +109,9 @@ accepted.
 | --- | --- |
 | [Airheads Developer Community][airheads-link] | Aruba Airheads forum to discuss all things network automation. |
 | [Aruba Bots Automate Videos][aruba-bots-playlist-link]| YouTube playlist containing instructional videos for Ansible and Python automation repositories. |
-| [aruba-switching-automation@hpe.com][email-link] | Distribution list email to contact the switching automation technical marketing engineering team. |
+| [aruba-automation@hpe.com][email-link] | Distribution list email to contact the Aruba Automation Technical Marketing Engineering team. |
 
 
 [airheads-link]: https://community.arubanetworks.com/t5/Developer-Community/bd-p/DeveloperCommunity
-[aruba-bots-playlist-link]: https://www.youtube.com/playlist?list=PLsYGHuNuBZcYzoh7OIWLTyBJf-ahvE70k
-[email-link]: mailto:aruba-switching-automation@hpe.com
+[aruba-bots-playlist-link]: https://www.youtube.com/playlist?list=PLsYGHuNuBZcY02FUh95ZpOB5VFkPurVaX
+[email-link]: mailto:aruba-automation@hpe.com
