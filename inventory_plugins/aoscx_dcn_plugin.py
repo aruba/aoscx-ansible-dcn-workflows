@@ -188,7 +188,7 @@ class InventoryModule(BaseInventoryPlugin):
                 formatted_ip0 = str(loopback_subnets[subnet_counter].ip)
                 host_data[device]['loopback0_ip'] = formatted_ip0
                 formatted_ip1 = str(loopback_subnets[subnet_counter + 100].ip)
-                host_data[device]['loopback0_ip'] = formatted_ip1
+                host_data[device]['loopback1_ip'] = formatted_ip1
                 subnet_counter += 1
 
         return excel_data
