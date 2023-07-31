@@ -1,7 +1,7 @@
 - hosts: all
   gather_facts: False
-  roles:
-    - role: arubanetworks.aoscx_role
+  collections:
+    - arubanetworks.aoscx
   vars:
     mclag_id: 12
     mclag_vlans:

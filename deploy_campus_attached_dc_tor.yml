@@ -1,7 +1,7 @@
 - hosts: dc_tor
   gather_facts: False
-  roles:
-    - role: arubanetworks.aoscx_role
+  collections:
+    - arubanetworks.aoscx
   vars:
     ansible_connection: network_cli
   tasks:
