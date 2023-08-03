@@ -8,11 +8,13 @@ all:
       vars:
         ansible_user: admin   # switch login user - used by aoscx_role
         ansible_password: admin   # switch login password - used by aoscx_role
-        ansible_connection: httpapi   # DO NOT CHANGE
-        ansible_network_os: aoscx   # DO NOT CHANGE
+        ansible_connection: arubanetworks.aoscx.aoscx   # DO NOT CHANGE
+        ansible_network_os: arubanetworks.aoscx.aoscx   # DO NOT CHANGE
         ansible_httpapi_use_ssl: True   # DO NOT CHANGE
         ansible_httpapi_validate_certs: False   # Will change depending on your environment
         ansible_acx_no_proxy: True   # REMOVE
+        ansible_aoscx_validate_certs: False
+        ansible_aoscx_use_proxy: False
       children:
         Zone1:  # Group for common variables within a specific DC Zone/Pod
           vars:
