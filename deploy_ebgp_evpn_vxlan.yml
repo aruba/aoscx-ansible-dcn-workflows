@@ -46,8 +46,8 @@
       loop: "{{vsx_pairs}}"
 
 - hosts: leaf
-  roles:
-    - role: arubanetworks.aoscx_role
+  collections:
+    - arubanetworks.aoscx
   gather_facts: False
   tasks:
     - name: Create BGP Neighbors and EVPN Address Family
