@@ -9,6 +9,7 @@
         headers:
           Content-Type: "application/x-www-form-urlencoded"
           Accept: application/json
+          x-use-csrf-token: true
         body: "username={{ansible_user}}&password={{ansible_password}}"
         validate_certs: no
         status_code: 200
@@ -17,18 +18,71 @@
 
     - name: Create BGP Neighbor
       uri:
-        url: "https://{{ansible_host}}/rest/v1/system/vrfs/default/bgp_routers/{{bgp_asn}}/bgp_neighbors"
+        url: "https://{{ansible_host}}/rest/v10.09/system/vrfs/default/bgp_routers/{{bgp_asn}}/bgp_neighbors"
         method: POST
         body_format: json
         headers:
           cookie: "{{ cx_session.set_cookie }}"
-        body: { "ip_or_group_name": "{{neighbor_ip}}",
+          x-csrf-token: "{{ cx_session.set_cookie }}"
+        body: {
+          "ORF_capability": {},
+          "ORF_prefix_list": {},
+          "add_paths": {
+            "ipv4-unicast": "disable",
+            "ipv6-unicast": "disable"
+          },
+          "add_paths_adv_best_n": {
+            "ipv4-unicast": 1,
+            "ipv6-unicast": 1
+          },
+          "advertisement_interval": {},
+          "allow_as_in": {},
+          "aspath_filters": {},
+          "bfd_enable": false,
+          "bgp_peer_group": null,
+          "default_originate": {
+            "ipv4-unicast": false,
+            "ipv6-unicast": false
+          },
+          "default_originate_route_map": {},
+          "description": null,
+          "ebgp_hop_count": 1,
+          "fall_over": false,
+          "gshut": {
+            "local_pref": 0,
+            "timer": 180
+          },
+          "ignore_leading_as": false,
+          "inbound_soft_reconfiguration": {
+            "ipv4-unicast": false,
+            "ipv6-unicast": false
+          },
+          "local_as": null,
+          "local_as_mode": "none",
+          "passive": false,
+          "password": null,
+          "prefix_lists": {},
+          "remove_private_as": false,
+          "route_maps": {},
+          "tcp_port_number": null,
+          "timers": {
+            "connect-retry": 120,
+            "holdtime": 180,
+            "keepalive": 60
+          },
+          "ttl_security_hops": null,
+          "update_source": null,
+          "vsx_sync_exclude": null,
+          "weight": 0,
+          "ip_or_ifname_or_group_name": "{{neighbor_ip}}",
           "is_peer_group": False,
           "activate": {"ipv4-unicast": "{{ipv4_unicast| default(False)}}", "ipv6-unicast": False,
           "l2vpn-evpn": "{{l2_evpn| default(False)}}"},
           "ebgp_hop_count": "{{ebgp_hop_count}}",
-          "local_interface": "/rest/v1/system/ports/loopback0",
-          "next_hop_self": {"ipv4-unicast": "{{nexthopself| default(False)}}","ipv6-unicast": false},
+          "local_interface": {"loopback0": "/rest/v10.09/system/interfaces/loopback0"},
+          "max_prefix_options": {},
+          "next_hop_self": {"ipv4-unicast": "{{nexthopself| default(False)}}","ipv6-unicast": false,
+          "l2vpn-evpn": "{{nexthopunchanged| default(False)}}"},
           "next_hop_unchanged": {"l2vpn-evpn": "{{nexthopunchanged| default(False)}}"},
           "route_reflector_client": {
                 "ipv4-unicast": False,
@@ -52,7 +106,7 @@
     # Logout from AOS-CX Switch
     - name: Logout from AOS-CX Switch
       uri:
-        url: 'https://{{ansible_host}}/rest/v1/logout'
+        url: 'https://{{ansible_host}}/rest/v10.09/logout'
         method: POST
         body_format: json
         headers:
