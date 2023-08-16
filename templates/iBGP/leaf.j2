@@ -12,6 +12,25 @@ router ospf 1
     router-id {{loopback0_ip}}
     area {{ospf_area}}
 vlan 1
+{% for vlan in server_vlans %}
+vlan {{vlan}}
+    name VLAN {{vlan}}
+    description Server VLAN
+{% endfor %}
+{% for vlan in server_vlans %}
+interface vxlan 1
+    source ip {{loopback1_ip}}
+    no shutdown
+    vni {{vlan}}
+        vlan {{vlan}}
+{% endfor %}
+{% for vlan in server_vlans %}
+evpn
+    vlan {{vlan}}
+        rd auto
+        route-target export auto
+        route-target import auto
+{% endfor %}
 interface {{vsx_keepalive_int}}
     no shutdown
     description VSX KA
@@ -65,6 +84,16 @@ vsx
     no split-recovery
 router bgp {{asn}}
     bgp router-id {{loopback0_ip}}
+{% for loopback0_ip in spine_loopback0_ips %}
+    neighbor {{loopback0_ip}} remote-as {{asn}}
+    neighbor {{loopback0_ip}} update-source loopback 0
+{% endfor %}
+    address-family l2vpn evpn
+{% for loopback0_ip in spine_loopback0_ips %}
+    neighbor {{loopback0_ip}} activate
+    neighbor {{loopback0_ip}} send-community extended
+{% endfor %}
+    exit-address-family
 !
 https-server rest access-mode read-write
 https-server vrf mgmt
