@@ -27,6 +27,12 @@ router bgp {{asn}}
     bgp router-id {{loopback0_ip}}
     bgp fast-external-fallover
     bgp bestpath as-path multipath-relax
+{% for vsx_pair in vsx_pairs %}
+{% for loopback in vsx_pair.loopback_ips %}
+    neighbor {{loopback}} remote-as {{vsx_pair.vsx_pair_asn}}
+    neighbor {{loopback}} ebgp-multihop 3
+{% endfor %}
+{% endfor %}
 {% for vsx_pair, vsx_pair_data in vsx_pair_downlinks.items() %}
 {% for interface_data in vsx_pair_data %}
     neighbor {{interface_data.vsx_pair_uplink_ip}} remote-as {{interface_data.vsx_pair_asn}}
@@ -40,6 +46,13 @@ router bgp {{asn}}
 {% endfor %}
         redistribute connected
         network {{loopback0_ip}}/32
+    exit-address-family
+    address-family l2vpn evpn
+{% for vsx_pair in vsx_pairs %}
+    neighbor {{loopback}} activate
+    neighbor {{loopback}} next-hop-unchanged
+    neighbor {{loopback}} send-community extended
+{% endfor %}
     exit-address-family
 !
 https-server rest access-mode read-write
