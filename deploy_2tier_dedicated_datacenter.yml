@@ -31,8 +31,8 @@
 
 - hosts: core
   gather_facts: False
-  roles:
-    - role: arubanetworks.aoscx_role
+  collections:
+    - arubanetworks.aoscx
   tasks:
     - set_fact:
         is_primary: "{{ vsx_role == 'primary' }}"
@@ -49,9 +49,15 @@
         description: "VSX KA"
         ipv4: "{{ vsx_keepalive_ip_primary if is_primary else vsx_keepalive_ip_secondary}}/31"
 
+    - name: Create ISL LAG for VSX
+      aoscx_lag_interface:
+        state: create
+        name: lag{{ vsx_isl_lagid }}
+        interfaces: "{{ vsx_isl_ports }}"
+
     - name: Enable ISL LAG for VSX
       aoscx_interface:
-        name: lag{{ mclag_id }}
+        name: lag{{ vsx_isl_lagid }}
         enabled: true
         description: "VSX ISL"
 
@@ -139,7 +145,6 @@
         state: create
         name: lag{{ vsx_isl_lagid }}
         interfaces: "{{ vsx_isl_ports }}"
-        multi_chassis: true
 
     - name: Enable ISL LAG for VSX
       aoscx_interface:
