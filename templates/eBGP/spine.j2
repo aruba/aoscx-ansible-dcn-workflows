@@ -49,9 +49,11 @@ router bgp {{asn}}
     exit-address-family
     address-family l2vpn evpn
 {% for vsx_pair in vsx_pairs %}
+{% for loopback in vsx_pair.loopback_ips %}
     neighbor {{loopback}} activate
     neighbor {{loopback}} next-hop-unchanged
     neighbor {{loopback}} send-community extended
+{% endfor %}
 {% endfor %}
     exit-address-family
 !
