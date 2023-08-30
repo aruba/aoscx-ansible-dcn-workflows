@@ -369,7 +369,7 @@ This playbook is a standalone workflow that configures VSX and its attributes on
 
 #### Playbook Prerequisites
 - All prerequisites defined above in [Prerequisites](https://github.com/aruba/aoscx-ansible-dcn-workflows#prerequisites)
-- This playbook uses playbook variables therefore it's only necessary for the inventory file to include all the [necessary REST API connection variables](https://github.com/aruba/aoscx-ansible-role#inventory-variables) for the aoscx_role.
+- This playbook uses playbook variables therefore it's only necessary for the inventory file to include all the [necessary SSH connection variables](https://developer.arubanetworks.com/aruba-aoscx/docs/using-the-aos-cx-ansible-collection#sshcli-modules) for the [aoscx Collection](https://developer.arubanetworks.com/aruba-aoscx/docs/using-the-aos-cx-ansible-collection).
 - Out-of-Band management connection to management port on AOS-CX switches
   - Ansible control machine should be reachable from device OOBM
 
@@ -388,7 +388,7 @@ This playbook is a standalone workflow that configures a multi-chassis LAG and i
 
 #### Playbook Prerequisites
 - All prerequisites defined above in [Prerequisites](https://github.com/aruba/aoscx-ansible-dcn-workflows#prerequisites)
-- This playbook uses playbook variables therefore it's only necessary for the inventory file to include all the [necessary REST API connection variables](https://github.com/aruba/aoscx-ansible-role#inventory-variables) for the aoscx_role.
+- This playbook uses playbook variables therefore it's only necessary for the inventory file to include all the [necessary SSH connection variables](https://developer.arubanetworks.com/aruba-aoscx/docs/using-the-aos-cx-ansible-collection#sshcli-modules) for the [aoscx Collection](https://developer.arubanetworks.com/aruba-aoscx/docs/using-the-aos-cx-ansible-collection).
 - Out-of-Band management connection to management port on AOS-CX switches
   - Ansible control machine should be reachable from device OOBM
 
@@ -424,7 +424,7 @@ This playbook is a standalone workflow that configures a multi-chassis LAG and i
 ├───inventory_2tier_dedicated_dc.yml        # Inventory file for Architecture I and Architecture II
 ├───inventory_2tier_dedicated_dc.yml        # Inventory file for Architecture III workflows
 ├───requirements.txt                        # Python library requirements for project
-├───requirements.yml                        # Galaxy role requirements for project
+├───requirements.yml                        # Galaxy collection requirements for project
 ```  
   
 ## How To Contribute

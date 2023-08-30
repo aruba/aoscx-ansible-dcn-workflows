@@ -6,8 +6,8 @@ all:
   children: # Defining High Level Groups
     aoscx_switches: # Group for all necessary Ansible connection CX variables
       vars:
-        ansible_user: admin   # switch login user - used by aoscx_role
-        ansible_password: admin   # switch login password - used by aoscx_role
+        ansible_user: admin   # switch login user - used by aoscx Collection
+        ansible_password: admin   # switch login password - used by aoscx Collection
         ansible_connection: arubanetworks.aoscx.aoscx   # DO NOT CHANGE
         ansible_network_os: arubanetworks.aoscx.aoscx   # DO NOT CHANGE
         ansible_httpapi_use_ssl: True   # DO NOT CHANGE
