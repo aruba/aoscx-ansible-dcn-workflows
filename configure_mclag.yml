@@ -1,7 +1,7 @@
 - hosts: all
   gather_facts: False
-  roles:
-    - role: arubanetworks.aoscx_role
+  collections:
+    - arubanetworks.aoscx
   vars:
     mclag_id: 12
     mclag_vlans:
@@ -16,13 +16,22 @@
       aoscx_vlan:
         vlan_id: "{{ item }}"
       with_items: "{{ mclag_vlans }}"
+    
+    - name: Create MCLAG Interface 64 with  3 interfaces.
+      aoscx_lag_interface:
+        state: create
+        name: lag{{ mclag_id }}
+        interfaces: "{{ mclag_ports }}"
+        multi_chassis: true
 
-    # Uses URI module
-    - name: Create MCLAG and trunk VLANs
-      include: tasks/aoscx/create_lag.yml
-      vars:
-        ports: "{{ mclag_ports }}"
-        lag_id: "{{ mclag_id }}"
-        mclag: True
-        lag_description: "{{ mclag_description }}"
-        lag_trunk_vlans: "{{ mclag_vlans}}"
+    - name: Configure MCLAG L2 Interface 
+      aoscx_l2_interface:
+        interface: lag{{ mclag_id }}
+        vlan_mode: trunk
+        vlan_trunks: "{{ mclag_vlans}}"      
+
+    - name: Enable MCLAG Interface
+      aoscx_interface:
+        name: lag{{ mclag_id }}
+        enabled: true
+        description: "{{ mclag_description }}"

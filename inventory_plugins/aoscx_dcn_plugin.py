@@ -1189,9 +1189,9 @@ class InventoryModule(BaseInventoryPlugin):
             for data_key, data_val in self.excel_data['network'].items():
                 self.inventory.set_variable(hostname, data_key, data_val)
 
-            # Static variables that must always be set for our aoscx_role
-            self.inventory.set_variable(hostname, 'ansible_network_os', 'aoscx')
-            self.inventory.set_variable(hostname, 'ansible_connection', 'httpapi')
+            # Static variables that must always be set for our aoscx collection
+            self.inventory.set_variable(hostname, 'ansible_network_os', 'arubanetworks.aoscx.aoscx')
+            self.inventory.set_variable(hostname, 'ansible_connection', 'arubanetworks.aoscx.aoscx')
             self.inventory.set_variable(hostname, 'ansible_httpapi_use_ssl', True)
 
     def verify_file(self, path):

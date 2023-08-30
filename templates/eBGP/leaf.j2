@@ -9,6 +9,25 @@ ssh server vrf mgmt
 !
 !
 vlan 1
+{% for vlan in server_vlans %}
+vlan {{vlan}}
+    name VLAN {{vlan}}
+    description Server VLAN
+{% endfor %}
+{% for vlan in server_vlans %}
+interface vxlan 1
+    source ip {{loopback1_ip}}
+    no shutdown
+    vni {{vlan}}
+        vlan {{vlan}}
+{% endfor %}
+{% for vlan in server_vlans %}
+evpn
+    vlan {{vlan}}
+        rd auto
+        route-target export 1:{{vlan}}
+        route-target import 1:{{vlan}}
+{% endfor %}
 interface {{vsx_keepalive_int}}
     no shutdown
     description VSX KA
@@ -60,6 +79,11 @@ router bgp {{vsx_pair_asn}}
     bgp router-id {{loopback0_ip}}
     bgp fast-external-fallover
     bgp bestpath as-path multipath-relax
+{% for loopback0_ip in spine_loopback0_ips %}
+    neighbor {{loopback0_ip}} remote-as {{asn}}
+    neighbor {{loopback0_ip}} ebgp-multihop 3
+    neighbor {{loopback0_ip}} update-source loopback 0
+{% endfor %}
 {% for spine_ip in spine_L3fabric_ips %}
     neighbor {{spine_ip}} remote-as {{asn}}
 {% endfor %}
@@ -70,6 +94,13 @@ router bgp {{vsx_pair_asn}}
         redistribute connected
         network {{loopback0_ip}}/32
         network {{loopback1_ip}}/32
+    exit-address-family
+    address-family l2vpn evpn
+{% for loopback0_ip in spine_loopback0_ips %}
+    neighbor {{loopback0_ip}} activate
+    neighbor {{loopback0_ip}} next-hop-unchanged
+    neighbor {{loopback0_ip}} send-community extended
+{% endfor %}
     exit-address-family
 !
 https-server rest access-mode read-write

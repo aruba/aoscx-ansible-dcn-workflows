@@ -31,6 +31,21 @@ interface loopback 0
     ip ospf 1 area {{ospf_area}}
 router bgp {{asn}}
     bgp router-id {{loopback0_ip}}
+{% for vsx_pair in vsx_pairs %}
+{% for loopback in vsx_pair.loopback_ips %}
+    neighbor {{loopback}} remote-as {{asn}}
+    neighbor {{loopback}}  update-source loopback 0
+{% endfor %}
+{% endfor %}
+    address-family l2vpn evpn
+{% for vsx_pair in vsx_pairs %}
+{% for loopback in vsx_pair.loopback_ips %}
+    neighbor {{loopback}} activate
+    neighbor {{loopback}} route-reflector-client
+    neighbor {{loopback}} send-community extended
+{% endfor %}
+{% endfor %}
+    exit-address-family
 !
 https-server rest access-mode read-write
 https-server vrf mgmt

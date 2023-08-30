@@ -1,2 +1,3 @@
-# aoscx_role from galaxy
-- src: arubanetworks.aoscx_role
+# aoscx collection from galaxy
+collections:
+- arubanetworks.aoscx
