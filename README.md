@@ -33,14 +33,14 @@ The workflows in this repository provision the switches according to the archite
 These workflows can be run on any Unix-based system. 
 
 ### Installations
-* The Ansible control machine must have **Python2.7** or **Python3.5+** and at least **Ansible 2.8.1** installed. See [Ansible Documentation](https://docs.ansible.com/ansible/latest/installation_guide/intro_installation.html) for more information on Ansible installation.
+* The Ansible control machine must have **Python3.5+** and at least **Ansible 2.9** installed. See [Ansible Documentation](https://docs.ansible.com/ansible/latest/installation_guide/intro_installation.html) for more information on Ansible installation.
 
-* This project requires the AOS-CX Ansible Role to be installed. The easiest way to install the role is by executing the `ansible-galaxy` command on the `requirements.yml` file:  
-`$ ansible-galaxy install -r requirements.yml`  
-For more information on how to use the `aoscx_role` visit our [Github](https://github.com/aruba/aoscx-ansible-role#aoscx).
+* This project requires the AOS-CX Ansible Collection to be installed. The easiest way to install the collection is by executing the `ansible-galaxy` command on the `requirements.yml` file:  
+`ansible-galaxy install -r requirements.yml`  
+For more information on how to use the [`aoscx` Collection](https://galaxy.ansible.com/arubanetworks/aoscx) visit our [Aruba devHub](https://developer.arubanetworks.com/aruba-aoscx/docs/getting-started-with-ansible-and-aos-cx).
 
 * This project requires the Python libraries listed below to be installed. The easiest way to install the required libraries is using the `pip` command on the `requirements.txt` file:  
-`$ pip install -r requirements.txt`
+`pip install -r requirements.txt`
 
 ### Inventory Setup
 This project contains multiple inventories, each corresponding to a specific workflow. Which inventory files correspond to which workflows is described in the [Workflows](https://github.com/aruba/aoscx-ansible-dcn-workflows#workflows) section of this document. 
@@ -103,8 +103,8 @@ Before executing a workflow, look through the inventory file used by that workfl
 
 * Examples of static inventory variables that **should not** be changed:
 ```YAML
-ansible_connection: httpapi   # DO NOT CHANGE
-ansible_network_os: aoscx   # DO NOT CHANGE
+ansible_connection: arubanetworks.aoscx.aoscx   # DO NOT CHANGE
+ansible_network_os: arubanetworks.aoscx.aoscx   # DO NOT CHANGE
 ansible_httpapi_use_ssl: True   # DO NOT CHANGE
 config_template: leaf.j2
 ```
@@ -165,17 +165,17 @@ This workflow provisions a campus attached data center set of top of rack AOS-CX
 #### Workflow Walkthrough
 * **Prior to executing the Ansible playbook, the environment must be in this initial state:**
   * Zone1-Core<1a/1b> - These devices each have a default configuration with an IP address (DHCP/Static) assigned to the management interface. This IP address should match the value of [`ansible_host`](https://github.com/aruba/aoscx-ansible-dcn-workflows/blob/master/inventory_2tier_dedicated_dc.yml#L49) for each device in the inventory.
-* The playbook will perform the following actions on every `core` device in the [inventory file](https://github.com/aruba/aoscx-ansible-dcn-workflows/blob/master/inventory_2tier_dedicated_dc.yml#L77), using REST API unless otherwise noted:
+* The playbook will perform the following actions on every `core` device in the [inventory file](https://github.com/aruba/aoscx-ansible-dcn-workflows/blob/master/inventory_2tier_dedicated_dc.yml#L77), using SSH:
   1. Generate a configuration based on the template file [templates/2Tier/core.j2](https://github.com/aruba/aoscx-ansible-dcn-workflows/blob/master/templates/2Tier/core.j2) and values defined in the inventory
   1. Push the generated configuration to the device using the AOS-CX Ansible **SSH** module `aoscx_config`
   1. Enable 10g speed interface groups (if defined in the [inventory](https://github.com/aruba/aoscx-ansible-dcn-workflows/blob/master/inventory_2tier_dedicated_dc.yml#L76)) 
  using the AOS-CX Ansible **SSH** module `aoscx_config`
-  1. Create [VSX Keepalive](https://github.com/aruba/aoscx-ansible-dcn-workflows/blob/master/inventory_2tier_dedicated_dc.yml#L31) L3 Interface
-  1. Create [VSX Inter-switch link](https://github.com/aruba/aoscx-ansible-dcn-workflows/blob/master/inventory_2tier_dedicated_dc.yml#L32-L33)
-  1. Configure [VSX attributes](https://github.com/aruba/aoscx-ansible-dcn-workflows/blob/master/inventory_2tier_dedicated_dc.yml#L44-L46) on the switch and specify device role as outlined in the [inventory](https://github.com/aruba/aoscx-ansible-dcn-workflows/blob/master/inventory_2tier_dedicated_dc.yml#L49)
-  1. Create all VLANs defined as `server_vlans` in the [inventory](https://github.com/aruba/aoscx-ansible-dcn-workflows/blob/master/inventory_2tier_dedicated_dc.yml#L25)
-  1. Create SVIs for all VLANs defined as `core_vlan_interfaces` in the [inventory](https://github.com/aruba/aoscx-ansible-dcn-workflows/blob/master/inventory_2tier_dedicated_dc.yml#L105-L109)
-  1. Configure the multi-chassis LAGs that connect to each access switch and trunk the VLANs in [`trunk_vlans`](https://github.com/aruba/aoscx-ansible-dcn-workflows/blob/master/inventory_2tier_dedicated_dc.yml#L90).
+  1. Create [VSX Keepalive](https://github.com/aruba/aoscx-ansible-dcn-workflows/blob/master/inventory_2tier_dedicated_dc.yml#L33) L3 Interface
+  1. Create [VSX Inter-switch link](https://github.com/aruba/aoscx-ansible-dcn-workflows/blob/master/inventory_2tier_dedicated_dc.yml#L34-L35)
+  1. Configure [VSX attributes](https://github.com/aruba/aoscx-ansible-dcn-workflows/blob/master/inventory_2tier_dedicated_dc.yml#L46-L48) on the switch and specify device role as outlined in the [inventory](https://github.com/aruba/aoscx-ansible-dcn-workflows/blob/master/inventory_2tier_dedicated_dc.yml#L51)
+  1. Create all VLANs defined as `server_vlans` in the [inventory](https://github.com/aruba/aoscx-ansible-dcn-workflows/blob/master/inventory_2tier_dedicated_dc.yml#L27)
+  1. Create SVIs for all VLANs defined as `core_vlan_interfaces` in the [inventory](https://github.com/aruba/aoscx-ansible-dcn-workflows/blob/master/inventory_2tier_dedicated_dc.yml#L107-L111)
+  1. Configure the multi-chassis LAGs that connect to each access switch and trunk the VLANs in [`trunk_vlans`](https://github.com/aruba/aoscx-ansible-dcn-workflows/blob/master/inventory_2tier_dedicated_dc.yml#L92).
      * **Note:** `vsx_pair_mclags` is a list of VSX Pair (rack# grouping) information for the core devices to use for configuring downlink interfaces. You should modify these values appropriately to match your environment.
   
   1. Configure BGP neighbor for iBGP peering between the core switches    
@@ -217,34 +217,34 @@ This workflow provisions a VSX pair of switches acting as a centralized collapse
 
 #### Workflow Walkthrough
 * **Before the Ansible playbook will be executed, the environment is in this initial state:**
-  * Zone1-Core<1a/1b> + Zone1-Rack<1/3>-Access<1/2/3/4> - These devices each have a default configuration with an IP address (DHCP/Static) assigned to the management interface. This IP address should match the value of [`ansible_host`](https://github.com/aruba/aoscx-ansible-dcn-workflows/blob/master/inventory_2tier_dedicated_dc.yml#L49) for each device in the inventory.  
-  * Zone1-Rack1-Access<1/2> - These devices are in a VSX pair with their physical links matching the values defined in the [inventory](https://github.com/aruba/aoscx-ansible-dcn-workflows/blob/master/inventory_2tier_dedicated_dc.yml#L31-L33)
-  * Zone1-Rack3-Access<3/4> - These devices are in a VSX pair with their physical links matching the values defined in the [inventory](https://github.com/aruba/aoscx-ansible-dcn-workflows/blob/master/inventory_2tier_dedicated_dc.yml#L31-L33) 
-  * Zone1-Core<1a/1b> - These devices are in a VSX pair with their physical links matching the values defined in the [inventory](https://github.com/aruba/aoscx-ansible-dcn-workflows/blob/master/inventory_2tier_dedicated_dc.yml#L31-L33)
+  * Zone1-Core<1a/1b> + Zone1-Rack<1/3>-Access<1/2/3/4> - These devices each have a default configuration with an IP address (DHCP/Static) assigned to the management interface. This IP address should match the value of [`ansible_host`](https://github.com/aruba/aoscx-ansible-dcn-workflows/blob/master/inventory_2tier_dedicated_dc.yml#L51) for each device in the inventory.  
+  * Zone1-Rack1-Access<1/2> - These devices are in a VSX pair with their physical links matching the values defined in the [inventory](https://github.com/aruba/aoscx-ansible-dcn-workflows/blob/master/inventory_2tier_dedicated_dc.yml#L33-L35)
+  * Zone1-Rack3-Access<3/4> - These devices are in a VSX pair with their physical links matching the values defined in the [inventory](https://github.com/aruba/aoscx-ansible-dcn-workflows/blob/master/inventory_2tier_dedicated_dc.yml#L33-L35) 
+  * Zone1-Core<1a/1b> - These devices are in a VSX pair with their physical links matching the values defined in the [inventory](https://github.com/aruba/aoscx-ansible-dcn-workflows/blob/master/inventory_2tier_dedicated_dc.yml#L33-L35)
 * The playbook will perform the following actions on **every** device in the inventory file [inventory_2tier_dedicated_dc.yml](https://github.com/aruba/aoscx-ansible-dcn-workflows/blob/master/inventory_2tier_dedicated_dc.yml) 
 using **SSH**:
   1. Generate a configuration based on the template file [templates/2Tier/core.j2](https://github.com/aruba/aoscx-ansible-dcn-workflows/blob/master/templates/2Tier/core.j2) or [templates/2Tier/access.j2](https://github.com/aruba/aoscx-ansible-dcn-workflows/blob/master/templates/2Tier/access.j2) and values defined in the inventory
   1. Push the generated configuration to the device using the AOS-CX Ansible SSH module `aoscx_config`
-  1. Enable 10g speed interface groups (if defined in the [inventory](https://github.com/aruba/aoscx-ansible-dcn-workflows/blob/master/inventory_2tier_dedicated_dc.yml#L76)) 
+  1. Enable 10g speed interface groups (if defined in the [inventory](https://github.com/aruba/aoscx-ansible-dcn-workflows/blob/master/inventory_2tier_dedicated_dc.yml#L78)) 
  using the AOS-CX Ansible SSH module `aoscx_config`
 * The playbook will perform the following actions on every `core` device in the [inventory file](https://github.com/aruba/aoscx-ansible-dcn-workflows/blob/master/inventory_2tier_dedicated_dc.yml) 
-using **REST API**:
-  1. Create [VSX Keepalive](https://github.com/aruba/aoscx-ansible-dcn-workflows/blob/master/inventory_2tier_dedicated_dc.yml#L31) L3 Interface
-  1. Create [VSX Inter-switch link](https://github.com/aruba/aoscx-ansible-dcn-workflows/blob/master/inventory_2tier_dedicated_dc.yml#L32-L33)
-  1. Configure [VSX attributes](https://github.com/aruba/aoscx-ansible-dcn-workflows/blob/master/inventory_2tier_dedicated_dc.yml#L44-L46) on the switch and specify device role as outlined in the [inventory](https://github.com/aruba/aoscx-ansible-dcn-workflows/blob/master/inventory_2tier_dedicated_dc.yml#L51)
-  1. Create all VLANs defined as `server_vlans` in the [inventory](https://github.com/aruba/aoscx-ansible-dcn-workflows/blob/master/inventory_2tier_dedicated_dc.yml#L25)
-  1. Create SVIs for all VLANs defined as `core_vlan_interfaces` in the [inventory](https://github.com/aruba/aoscx-ansible-dcn-workflows/blob/master/inventory_2tier_dedicated_dc.yml#L105-L109)
-  1. Configure the multi-chassis LAGs that connect to each access switch and trunk the VLANs in [`trunk_vlans`](https://github.com/aruba/aoscx-ansible-dcn-workflows/blob/master/inventory_2tier_dedicated_dc.yml#L90).
+using **SSH**:
+  1. Create [VSX Keepalive](https://github.com/aruba/aoscx-ansible-dcn-workflows/blob/master/inventory_2tier_dedicated_dc.yml#L33) L3 Interface
+  1. Create [VSX Inter-switch link](https://github.com/aruba/aoscx-ansible-dcn-workflows/blob/master/inventory_2tier_dedicated_dc.yml#L34-L35)
+  1. Configure [VSX attributes](https://github.com/aruba/aoscx-ansible-dcn-workflows/blob/master/inventory_2tier_dedicated_dc.yml#L46-L48) on the switch and specify device role as outlined in the [inventory](https://github.com/aruba/aoscx-ansible-dcn-workflows/blob/master/inventory_2tier_dedicated_dc.yml#L53)
+  1. Create all VLANs defined as `server_vlans` in the [inventory](https://github.com/aruba/aoscx-ansible-dcn-workflows/blob/master/inventory_2tier_dedicated_dc.yml#L27)
+  1. Create SVIs for all VLANs defined as `core_vlan_interfaces` in the [inventory](https://github.com/aruba/aoscx-ansible-dcn-workflows/blob/master/inventory_2tier_dedicated_dc.yml#L107-L111)
+  1. Configure the multi-chassis LAGs that connect to each access switch and trunk the VLANs in [`trunk_vlans`](https://github.com/aruba/aoscx-ansible-dcn-workflows/blob/master/inventory_2tier_dedicated_dc.yml#L92).
      * **Note:** `vsx_pair_mclags` is a list of VSX Pair (rack# grouping) information for the core devices to use for configuring downlink interfaces. You should modify these values appropriately to match your environment.
     
   1. Configure BGP neighbor for iBGP peering between the core switches  
   
 * The playbook will perform the following actions on every `access` device in the [inventory file](https://github.com/aruba/aoscx-ansible-dcn-workflows/blob/master/inventory_2tier_dedicated_dc.yml) 
-using **REST API**:
-  1. Create [VSX Keepalive](https://github.com/aruba/aoscx-ansible-dcn-workflows/blob/master/inventory_2tier_dedicated_dc.yml#L31) L3 Interface
-  1. Create [VSX Inter-switch link](https://github.com/aruba/aoscx-ansible-dcn-workflows/blob/master/inventory_2tier_dedicated_dc.yml#L32-L33)
-  1. Configure [VSX attributes](https://github.com/aruba/aoscx-ansible-dcn-workflows/blob/master/inventory_2tier_dedicated_dc.yml#L44-L46) on the switch and specify device role as outlined in the [inventory](https://github.com/aruba/aoscx-ansible-dcn-workflows/blob/master/inventory_2tier_dedicated_dc.yml#L49)
-  1. Create all VLANs defined as `server_vlans` in the [inventory](https://github.com/aruba/aoscx-ansible-dcn-workflows/blob/master/inventory_2tier_dedicated_dc.yml#L25)
+using **SSH**:
+  1. Create [VSX Keepalive](https://github.com/aruba/aoscx-ansible-dcn-workflows/blob/master/inventory_2tier_dedicated_dc.yml#L33) L3 Interface
+  1. Create [VSX Inter-switch link](https://github.com/aruba/aoscx-ansible-dcn-workflows/blob/master/inventory_2tier_dedicated_dc.yml#L34-L35)
+  1. Configure [VSX attributes](https://github.com/aruba/aoscx-ansible-dcn-workflows/blob/master/inventory_2tier_dedicated_dc.yml#L46-L48) on the switch and specify device role as outlined in the [inventory](https://github.com/aruba/aoscx-ansible-dcn-workflows/blob/master/inventory_2tier_dedicated_dc.yml#L51)
+  1. Create all VLANs defined as `server_vlans` in the [inventory](https://github.com/aruba/aoscx-ansible-dcn-workflows/blob/master/inventory_2tier_dedicated_dc.yml#L27)
   1. Configure the multi-chassis LAG that connects to each core switch and trunk the `server_vlans` 
 * For example final configurations for this workflow, see [configs/sample_configs/arch2](https://github.com/aruba/aoscx-ansible-dcn-workflows/configs/sample_configs/arch2)
   
@@ -285,24 +285,24 @@ This workflow **does not** configure the centralized L3 gateway.
 #### Workflow Walkthrough
 * **Before the Ansible playbook will be executed, the environment is in this initial state:**
   * Zone1-Spine<1/2> + Zone1-Rack1-Leaf<1a/1b> + Zone1-Rack3-Leaf<3a/3b> - These devices have a default configuration with an IP address (DHCP/Static) assigned to 
-the management interface, this IP address should be the value of [`ansible_host`](https://github.com/aruba/aoscx-ansible-dcn-workflows/blob/master/inventory_spine_leaf.yml#L57) for each device in the inventory.  
-  * Zone1-Rack1-Leaf<1a/1b> - These devices are in a VSX pair with their physical links matching the values defined in the [inventory](https://github.com/aruba/aoscx-ansible-dcn-workflows/blob/master/inventory_spine_leaf.yml#L30-L32)
-  * Zone1-Rack3-Leaf<3a/3b> - These devices are in a VSX pair with their physical links matching the values defined in the [inventory](https://github.com/aruba/aoscx-ansible-dcn-workflows/blob/master/inventory_spine_leaf.yml#L30-L32) 
+the management interface, this IP address should be the value of [`ansible_host`](https://github.com/aruba/aoscx-ansible-dcn-workflows/blob/master/inventory_spine_leaf.yml#L59) for each device in the inventory.  
+  * Zone1-Rack1-Leaf<1a/1b> - These devices are in a VSX pair with their physical links matching the values defined in the [inventory](https://github.com/aruba/aoscx-ansible-dcn-workflows/blob/master/inventory_spine_leaf.yml#L32-L34)
+  * Zone1-Rack3-Leaf<3a/3b> - These devices are in a VSX pair with their physical links matching the values defined in the [inventory](https://github.com/aruba/aoscx-ansible-dcn-workflows/blob/master/inventory_spine_leaf.yml#L32-L34) 
 * The playbook will perform the following actions on **every** device in the [inventory file](https://github.com/aruba/aoscx-ansible-dcn-workflows/blob/master/inventory_spine_leaf.yml) 
 using **SSH**:
   1. Generate a configuration based on the template file [templates/eBGP/spine.j2](https://github.com/aruba/aoscx-ansible-dcn-workflows/blob/master/templates/eBGP/spine.j2) or [templates/eBGP/leaf.j2](https://github.com/aruba/aoscx-ansible-dcn-workflows/blob/master/templates/eBGP/leaf.j2)  
  and values defined in the inventory
   1. Push the generated configuration to the device using the AOS-CX SSH Ansible module `aoscx_config`
-  1. Enable 10g speed interface groups (if defined in the [inventory](https://github.com/aruba/aoscx-ansible-dcn-workflows/blob/master/inventory_spine_leaf.yml#L114) 
+  1. Enable 10g speed interface groups (if defined in the [inventory](https://github.com/aruba/aoscx-ansible-dcn-workflows/blob/master/inventory_spine_leaf.yml#L116) 
  using the AOS-CX SSH Ansible module `aoscx_config`
-* The playbook will perform the following actions on every `spine` device in the [inventory file](https://github.com/aruba/aoscx-ansible-dcn-workflows/blob/master/inventory_spine_leaf.yml#L115) 
-using **REST API**:
-  1. Configure BGP neighbors and EVPN address families for [every leaf's loopback IP address](https://github.com/aruba/aoscx-ansible-dcn-workflows/blob/master/inventory_spine_leaf.yml#L120-L124) on every leaf's BGP ASN  
-* The playbook will perform the following actions on every `leaf` device in the [inventory file](https://github.com/aruba/aoscx-ansible-dcn-workflows/blob/master/inventory_spine_leaf.yml#L34) 
-using **REST API**:
+* The playbook will perform the following actions on every `spine` device in the [inventory file](https://github.com/aruba/aoscx-ansible-dcn-workflows/blob/master/inventory_spine_leaf.yml#L117) 
+using **SSH**:
+  1. Configure BGP neighbors and EVPN address families for [every leaf's loopback IP address](https://github.com/aruba/aoscx-ansible-dcn-workflows/blob/master/inventory_spine_leaf.yml#L122-L126) on every leaf's BGP ASN  
+* The playbook will perform the following actions on every `leaf` device in the [inventory file](https://github.com/aruba/aoscx-ansible-dcn-workflows/blob/master/inventory_spine_leaf.yml#L36) 
+using **SSH**:
   1. 
-  s and EVPN address families for [every spine's loopback IP address](https://github.com/aruba/aoscx-ansible-dcn-workflows/blob/master/inventory_spine_leaf.yml#L25-L27)
-  1. Create all VLANs defined as `server_vlans` in the [inventory](https://github.com/aruba/aoscx-ansible-dcn-workflows/blob/master/inventory_spine_leaf.yml#L28) 
+  s and EVPN address families for [every spine's loopback IP address](https://github.com/aruba/aoscx-ansible-dcn-workflows/blob/master/inventory_spine_leaf.yml#L27-L29)
+  1. Create all VLANs defined as `server_vlans` in the [inventory](https://github.com/aruba/aoscx-ansible-dcn-workflows/blob/master/inventory_spine_leaf.yml#L30) 
   1. Create all EVPN instance and map VLANs defined in `server_vlans`
 * For example final configurations for this workflow see [configs/sample_configs/arch3_eBGP](https://github.com/aruba/aoscx-ansible-dcn-workflows/configs/sample_configs/arch3_eBGP)
   
@@ -341,23 +341,23 @@ based on the [validated reference design](https://community.arubanetworks.com/t5
 #### Workflow Walkthrough
 * **Before the Ansible playbook will be executed, the environment is in this initial state:**
   * Zone1-Spine<1/2> + Zone1-Rack1-Leaf<1a/1b> + Zone1-Rack3-Leaf<3a/3b> - These devices have a default configuration with an IP address (DHCP/Static) assigned to 
-the management interface, this IP address should be the value of [`ansible_host`](https://github.com/aruba/aoscx-ansible-dcn-workflows/blob/master/inventory_spine_leaf.yml#L57) for each device in the inventory.  
-  * Zone1-Rack1-Leaf<1a/1b> - These devices are in a VSX pair with their physical links matching the values defined in the [inventory](https://github.com/aruba/aoscx-ansible-dcn-workflows/blob/master/inventory_spine_leaf.yml#L30-L32)
-  * Zone1-Rack3-Leaf<3a/3b> - These devices are in a VSX pair with their physical links matching the values defined in the [inventory](https://github.com/aruba/aoscx-ansible-dcn-workflows/blob/master/inventory_spine_leaf.yml#L30-L32) 
+the management interface, this IP address should be the value of [`ansible_host`](https://github.com/aruba/aoscx-ansible-dcn-workflows/blob/master/inventory_spine_leaf.yml#L59) for each device in the inventory.  
+  * Zone1-Rack1-Leaf<1a/1b> - These devices are in a VSX pair with their physical links matching the values defined in the [inventory](https://github.com/aruba/aoscx-ansible-dcn-workflows/blob/master/inventory_spine_leaf.yml#L32-L34)
+  * Zone1-Rack3-Leaf<3a/3b> - These devices are in a VSX pair with their physical links matching the values defined in the [inventory](https://github.com/aruba/aoscx-ansible-dcn-workflows/blob/master/inventory_spine_leaf.yml#L32-L34) 
 * The playbook will perform the following actions on **every** device in the [inventory file](https://github.com/aruba/aoscx-ansible-dcn-workflows/blob/master/inventory_spine_leaf.yml) 
 using **SSH**:
   1. Generate a configuration based on the template file [templates/iBGP/spine.j2](https://github.com/aruba/aoscx-ansible-dcn-workflows/blob/master/templates/iBGP/spine.j2) or [templates/iBGP/leaf.j2](https://github.com/aruba/aoscx-ansible-dcn-workflows/blob/master/templates/iBGP/leaf.j2)  
  and values defined in the inventory
   1. Push the generated configuration to the device using the AOS-CX SSH Ansible module `aoscx_config`
-  1. Enable 10g speed interface groups (if defined in the [inventory](https://github.com/aruba/aoscx-ansible-dcn-workflows/blob/master/inventory_spine_leaf.yml#L114) 
+  1. Enable 10g speed interface groups (if defined in the [inventory](https://github.com/aruba/aoscx-ansible-dcn-workflows/blob/master/inventory_spine_leaf.yml#L116) 
  using the AOS-CX SSH Ansible module `aoscx_config`
-* The playbook will perform the following actions on every `spine` device in the [inventory file](https://github.com/aruba/aoscx-ansible-dcn-workflows/blob/master/inventory_spine_leaf.yml#L115) 
-using **REST API**:
-  1. Configure BGP neighbors and EVPN address families for [every leaf's loopback IP address](https://github.com/aruba/aoscx-ansible-dcn-workflows/blob/master/inventory_spine_leaf.yml#L120-L124)  
-* The playbook will perform the following actions on every `leaf` device in the [inventory file](https://github.com/aruba/aoscx-ansible-dcn-workflows/blob/master/inventory_spine_leaf.yml#L34) 
-using **REST API**:
-  1. Configure BGP neighbors and EVPN address families for [every spine's loopback IP address](https://github.com/aruba/aoscx-ansible-dcn-workflows/blob/master/inventory_spine_leaf.yml#L25-L27)
-  1. Create all VLANs defined as `server_vlans` in the [inventory](https://github.com/aruba/aoscx-ansible-dcn-workflows/blob/master/inventory_spine_leaf.yml#L28) 
+* The playbook will perform the following actions on every `spine` device in the [inventory file](https://github.com/aruba/aoscx-ansible-dcn-workflows/blob/master/inventory_spine_leaf.yml#L117) 
+using **SSH**:
+  1. Configure BGP neighbors and EVPN address families for [every leaf's loopback IP address](https://github.com/aruba/aoscx-ansible-dcn-workflows/blob/master/inventory_spine_leaf.yml#L122-L126)  
+* The playbook will perform the following actions on every `leaf` device in the [inventory file](https://github.com/aruba/aoscx-ansible-dcn-workflows/blob/master/inventory_spine_leaf.yml#L36) 
+using **SSH**:
+  1. Configure BGP neighbors and EVPN address families for [every spine's loopback IP address](https://github.com/aruba/aoscx-ansible-dcn-workflows/blob/master/inventory_spine_leaf.yml#L27-L29)
+  1. Create all VLANs defined as `server_vlans` in the [inventory](https://github.com/aruba/aoscx-ansible-dcn-workflows/blob/master/inventory_spine_leaf.yml#L30) 
   1. Create all EVPN instance and map VLANs defined in `server_vlans`
 * For example final configurations for this workflow see [configs/sample_configs/arch3_iBGP](https://github.com/aruba/aoscx-ansible-dcn-workflows/configs/sample_configs/arch3_iBGP)
   
@@ -379,9 +379,9 @@ This playbook is a standalone workflow that configures VSX and its attributes on
 
 
 #### Playbook Walkthrough
-  1. Create [VSX Keepalive](https://github.com/aruba/aoscx-ansible-dcn-workflows/blob/master/configure_vsx.yml#L7) L3 Interface
-  1. Create [VSX Inter-switch link](https://github.com/aruba/aoscx-ansible-dcn-workflows/blob/master/configure_vsx.yml#L11-L14) for VSX
-  1. Configure [VSX attributes](https://github.com/aruba/aoscx-ansible-dcn-workflows/blob/master/configure_vsx.yml#L8-L10) on the switch and specify device role as outlined in the [playbook variable](https://github.com/aruba/aoscx-ansible-dcn-workflows/blob/master/configure_vsx.yml#L6)
+  1. Create [VSX Keepalive](https://github.com/aruba/aoscx-ansible-dcn-workflows/blob/master/configure_vsx.yml#L9) L3 Interface
+  1. Create [VSX Inter-switch link](https://github.com/aruba/aoscx-ansible-dcn-workflows/blob/master/configure_vsx.yml#L13-L16) for VSX
+  1. Configure [VSX attributes](https://github.com/aruba/aoscx-ansible-dcn-workflows/blob/master/configure_vsx.yml#L10-L12) on the switch and specify device role as outlined in the [playbook variable](https://github.com/aruba/aoscx-ansible-dcn-workflows/blob/master/configure_vsx.yml#L8)
 
 ### Configure Multi-Chassis LAG Standalone Playbook
 This playbook is a standalone workflow that configures a multi-chassis LAG and its interfaces on a AOS-CX switch.
@@ -398,8 +398,8 @@ This playbook is a standalone workflow that configures a multi-chassis LAG and i
 
 
 #### Playbook Walkthrough
-  1. Create all VLANs defined as `mclag_vlans` in the [playbook](https://github.com/aruba/aoscx-ansible-dcn-workflows/blob/master/configure_mclag.yml#L7-L9)
-  1. Configure the multi-chassis LAG and it's [interfaces](https://github.com/aruba/aoscx-ansible-dcn-workflows/blob/master/configure_mclag.yml#L10-L12) and trunk the `mclag_vlans` 
+  1. Create all VLANs defined as `mclag_vlans` in the [playbook](https://github.com/aruba/aoscx-ansible-dcn-workflows/blob/master/configure_mclag.yml#L9-L11)
+  1. Configure the multi-chassis LAG and it's [interfaces](https://github.com/aruba/aoscx-ansible-dcn-workflows/blob/master/configure_mclag.yml#L12-L14) and trunk the `mclag_vlans` 
   
 ## Project Structure
 ```bash
