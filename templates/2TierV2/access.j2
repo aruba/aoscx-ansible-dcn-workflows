@@ -1,0 +1,123 @@
+hostname {{ hostname}}
+profile aggregation-leaf
+ntp enable
+{% for server in ntp_servers %}
+ntp server {{ server }}
+{% endfor %}
+ntp server pool.ntp.org minpoll 4 maxpoll 4 iburst
+ntp vrf {{ ntp_vrf | default("mgmt", true) }}
+!
+!
+!
+!
+{% for server in tacacs_servers %}
+tacacs-server host {{server.host}} key ciphertext {{server.ciphertext}} vrf mgmt
+{% endfor %}
+!
+!
+!
+ssh server vrf mgmt
+vlan 1
+{% for vlan in host_vlans %}
+vlan {{vlan.id}}
+    name {{vlan.name}}
+    ip igmp snooping enable
+{% endfor %}
+spanning-tree
+{% if group is defined %}
+spanning-tree config-name {{group}}
+{% elif stp_config_name is defined %}
+spanning-tree config-name {{stp_config_name}}
+{% endif %}
+interface mgmt
+    no shutdown
+    ip dhcp
+{% if speed_interface_group_10g is defined %}  
+auto-confirm
+{% for int_group in speed_interface_group_10g %}  
+system interface-group {{int_group}} speed 10g
+{% endfor %}
+{% endif %}
+
+{% for lag in mclags %}
+interface lag {{lag.id}} multi-chassis
+    no shutdown
+    no routing    
+    description {{lag.description}}
+    vlan trunk native 1
+{% for vlan in lag.allowed_vlans %}
+    vlan trunk allowed {{vlan}}
+{% endfor %}
+    lacp mode active
+{% if lag.id == '1' %}
+    spanning-tree root-guard
+{% endif %}
+{% endfor %}
+interface lag {{vsx_isl_lagid}}
+    no shutdown
+    description VSX-ISL-LAG
+    no routing
+    vlan trunk native 1 tag
+    vlan trunk allowed all
+    lacp mode active
+{% if vsx_isl_ports is defined %}    
+    {% for interface in vsx_isl_ports %}
+interface {{interface}}
+    no shutdown
+    description VSX ISL
+        {% if  mtu is defined %}
+    mtu {{mtu}}
+        {% else %}
+    mtu 9198    
+        {% endif %}
+    lag {{vsx_isl_lagid}}
+    {% endfor %}
+{% else %}
+{% endif %}
+{% if vsx_keepalive_int is defined %}
+interface {{vsx_keepalive_int}}
+    no shutdown
+    description VSX KA
+{% if vsx_role == 'primary' %}
+    ip address {{vsx_keepalive_ip_primary}}/31
+{% else %}
+    ip address {{vsx_keepalive_ip_secondary}}/31
+{% endif %}
+{% endif %}
+{% for lag in mclags %}
+{% for interface in lag.interfaces %}
+interface {{interface}}
+    no shutdown
+    description {{lag.description}}
+    mtu {{mtu}}
+    lag {{lag.id}}
+{% endfor %}
+{% endfor %}
+snmp-server system-location {{ system_location }}
+snmp-server system-contact {{ system_contact }}
+vsx
+    system-mac {{vsx_system_mac | default('02:00:00:00:10:01', true)}}
+    inter-switch-link lag {{vsx_isl_lagid | default('256', true)}}
+    role {{vsx_role}}
+{% if vsx_keepalive_vrf is defined %}
+{% if vsx_role == 'primary' %}
+    keepalive peer {{vsx_keepalive_ip_secondary}} source {{vsx_keepalive_ip_primary}} vrf {{vsx_keepalive_vrf}}
+{% else %}
+    keepalive peer {{vsx_keepalive_ip_primary}} source {{vsx_keepalive_ip_secondary}} vrf {{vsx_keepalive_vrf}}
+{% endif %}
+{% else %}
+{% if vsx_role == 'primary' %}
+    keepalive peer {{vsx_keepalive_ip_secondary}} source {{vsx_keepalive_ip_primary}}
+{% else %}
+    keepalive peer {{vsx_keepalive_ip_primary}} source {{vsx_keepalive_ip_secondary}}
+{% endif %}
+{% endif %}
+{% for server in dns_servers %}
+ip dns server-address {{server}} vrf mgmt
+{% endfor %}
+!
+!
+!
+!
+!
+https-server vrf mgmt
