@@ -1,0 +1,30 @@
+- hosts: all
+  gather_facts: False
+  collections:
+    - arubanetworks.aoscx
+  vars:
+    ansible_connection: network_cli
+  tasks:
+    - name: Generate Template for Device
+      template: src="{{config_template}}" dest="{{config_path}}{{hostname}}.conf" mode='0777'
+
+    - name: Copy generated config to device via SSH
+      aoscx_config:
+        src: "{{config_path}}{{hostname}}.conf"
+
+    - name: Configure system interface-group speeds when provided
+      block:
+      - name: Enable auto-confirm
+        aoscx_command:
+          commands: ['auto-confirm']
+
+      - name: enabling 10g speed on system interface-group {{item}}
+        aoscx_config:
+          lines:
+            - system interface-group {{item}} speed 10g
+        loop: "{{speed_interface_group_10g}}"
+
+      - name: Disable auto-confirm
+        aoscx_command:
+          commands: ['no auto-confirm']
+      when: speed_interface_group_10g is defined

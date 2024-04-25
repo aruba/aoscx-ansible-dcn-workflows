@@ -1,0 +1,190 @@
+##########################
+# Aruba DCN Workflows
+# Example Inventory
+##########################
+all:
+  children: # Defining High Level Groups
+    aoscx_switches: # Group for all necessary Ansible connection CX variables
+      vars:
+        ansible_user: admin   # switch login user - used by aoscx Collection
+        ansible_password: admin   # switch login password - used by aoscx Collection
+        ansible_connection: arubanetworks.aoscx.aoscx   # DO NOT CHANGE
+        ansible_network_os: arubanetworks.aoscx.aoscx   # DO NOT CHANGE
+        ansible_httpapi_use_ssl: True   # DO NOT CHANGE
+        ansible_httpapi_validate_certs: False   # Will change depending on your environment
+        ansible_acx_no_proxy: True   # REMOVE
+        ansible_aoscx_validate_certs: False
+        ansible_aoscx_use_proxy: False
+      children:
+        DC-RSV:  # Group for common variables within a specific DC Zone/Pod
+          vars:
+            hostname: "{{inventory_hostname}}"  # hostname of the device is set to the device's inventory name
+            group: RSVDC
+            config_path: "configs/"   # Destination directory for generated switch configurations
+            timezone: "america/los_angeles"
+            mtu: 9198
+            stp_config_name: "{{group}}"
+            ntp_servers: [10.2.120.98, 10.2.120.99]
+            ntp_vrf: mgmt
+            dns_servers: [10.2.120.98, 10.2.120.99]
+            dns_domain: example.local
+            system_location: DC01, Roseville, CA
+            system_contact: netadmin@orangetme.local
+            ospf_area: 0.0.0.0
+            tacacs_servers:
+              - host: 10.2.120.94
+                ciphertext: AQBapTMGmLBPD14dwIgtfKtG6BbiEjvtTBdL/mC3bEo91XegCQAAAFUz3moFw0EX0A==
+              - host: 10.2.120.94
+                ciphertext: AQBapTsQeZay/1Mw1ivHkhdC7MGDGFcUz0oUsSNzdQf+gUw0CQAAABFOhXhwqm+UpA==
+            host_vlans:   # VLANs to be created on devices for DC host traffic
+              - id: 101
+                name: PROD-WEB
+                active_gateway_mac: 02:00:0a:01:65:01
+                active_gateway_ip: 10.12.101.1
+              - id: 102
+                name: PROD-DB
+                active_gateway_mac: 02:00:0a:01:65:01
+                active_gateway_ip: 10.12.102.1
+            # VSX information
+            vsx_isl_lagid: 256
+            vsx_keepalive_vrf: mgmt
+          children:
+            core:
+              vars:
+                config_template: templates/2TierV2/core.j2
+                # VSX information
+                vsx_system_mac: 02:00:00:00:10:00
+                vsx_keepalive_ip_primary: 172.16.117.101
+                vsx_keepalive_ip_secondary: 172.16.117.102
+                vsx_isl_ports: [1/1/31, '1/1/32']
+                mclags:
+                  - id: 1
+                    interfaces: ['1/1/1', '1/1/2']
+                    allowed_vlans: ['all']
+                    mtu: 9198
+                    description: RACK-1
+                  - id: 2
+                    interfaces: ['1/1/3', '1/1/4']
+                    allowed_vlans: ['all']
+                    mtu: 9198
+                    description: RACK-2
+                  - id: 101
+                    interfaces: ['1/1/29']
+                    allowed_vlans: [4000]
+                    mtu: 9198
+                    description: EXT-FW1-1
+                  - id: 102
+                    interfaces: ['1/1/30']
+                    allowed_vlans: [4000]
+                    mtu: 9198
+                    description: EXT-FW1-2                  
+              hosts:
+                RSVDC-CORE1-1:
+                  ansible_host: 172.16.117.101
+                  vsx_role: primary
+                  loopback0_ip: 10.250.12.1
+                  routing_vlans:
+                    - id: 4000
+                      name: CORE-ROUTING-SVI
+                      ip_address: 10.255.12.1
+                  # SVI information for DC host VLANs - used in jinja2 template
+                  host_vlans:
+                    - id: 101
+                      name: PROD-WEB
+                      ip_address: 10.12.101.2
+                      active_gateway_mac: 02:00:0a:01:65:01
+                      active_gateway_ip: 10.12.101.1
+                    - id: 102
+                      name: PROD-DB
+                      ip_address: 10.12.102.2
+                      active_gateway_mac: 02:00:0a:01:65:01
+                      active_gateway_ip: 10.12.102.1
+                RSVDC-CORE1-2:
+                  ansible_host: 172.16.117.102
+                  loopback0_ip: 10.250.12.2
+                  vsx_role: secondary
+                  routing_vlans:
+                    - id: 4000
+                      name: CORE-ROUTING-SVI
+                      ip_address: 10.255.12.2   
+                  # SVI information for DC host VLANs - used in jinja2 template
+                  host_vlans:
+                    - id: 101
+                      name: PROD-WEB
+                      ip_address: 10.12.101.3
+                      active_gateway_mac: 02:00:0a:01:65:01
+                      active_gateway_ip: 10.12.101.1
+                    - id: 102
+                      name: PROD-DB
+                      ip_address: 10.12.102.3
+                      active_gateway_mac: 02:00:0a:01:65:01
+                      active_gateway_ip: 10.12.102.1
+            access:
+              vars:
+                config_template: templates/2TierV2/access.j2
+                speed_interface_group_10g: [1]  # Enables 10g speed on specified interface groups, remove variable if unused
+                vsx_isl_ports: ['1/1/49', '1/1/50']
+                vsx_system_mac: 02:00:00:00:10:01
+                mclags:
+                  - id: 1
+                    interfaces: [1/1/1]
+                    allowed_vlans: [101, 102]
+                    mtu: 9198
+                    description: ESXi-01
+                  - id: 255
+                    interfaces: [1/1/53, 1/1/54]
+                    allowed_vlans: ['all']
+                    mtu: 9198
+                    description: DC-CORE
+              # Access devices are grouped by VSX pairs,
+              # names of vsx_pairs can be anything alphanumeric
+              # devices do not have to be physically in the same "vsx_pair"
+              children:
+                rack1:
+                  vars:
+                    # VSX information
+                    vsx_system_mac: 02:00:00:00:10:01
+                    vsx_keepalive_ip_primary: 172.16.117.103
+                    vsx_keepalive_ip_secondary: 172.16.117.104
+                    mclags:
+                      - id: 1
+                        interfaces: [1/1/1]
+                        allowed_vlans: ['all']
+                        mtu: 9198
+                        description: ESXi-01
+                      - id: 255
+                        interfaces: [1/1/53, 1/1/54]
+                        allowed_vlans: ['all']
+                        mtu: 9198
+                        description: DC-CORE                    
+                  hosts:
+                    RSVDC-ACCESS1-1:
+                      ansible_host: 172.16.117.103  # IP address of the switch, change to match 
+                      vsx_role: primary
+                    RSVDC-ACCESS1-2:
+                      ansible_host: 172.16.117.104  # IP address of the switch, change to match 
+                      vsx_role: secondary
+                rack2:
+                  vars:
+                    # VSX information
+                    vsx_system_mac: 02:00:00:00:10:02
+                    vsx_keepalive_ip_primary: 172.16.117.105  # IP address of the switch, change to match 
+                    vsx_keepalive_ip_secondary: 172.16.117.106  # IP address of the switch, change to match 
+                    vsx_mclags:
+                      - id: 1
+                        interfaces: [1/1/1]
+                        allowed_vlans: ['all']
+                        mtu: 9198
+                        description: ESXi-01
+                      - id: 255
+                        interfaces: [1/1/53, 1/1/54]
+                        allowed_vlans: ['all']
+                        mtu: 9198
+                        description: DC-CORE                    
+                  hosts:
+                    RSVDC-ACCESS2-1:
+                      ansible_host: 172.16.117.105  # IP address of the switch, change to match 
+                      vsx_role: primary
+                    RSVDC-ACCESS2-2:
+                      ansible_host: 172.16.117.106  # IP address of the switch, change to match 
+                      vsx_role: secondary
