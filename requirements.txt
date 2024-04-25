@@ -3,5 +3,5 @@ paramiko>=2.1.1         # ansible
 pip>=6.0
 requests>=2.2.0         # module_utils/aoscx.py
 netaddr>=0.7.5          # templates/2Tier/core.j2
-pyaoscx>=2.4.1
+pyaoscx>=2.5.1
 openpyxl
