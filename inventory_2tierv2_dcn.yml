@@ -39,12 +39,8 @@ all:
             host_vlans:   # VLANs to be created on devices for DC host traffic
               - id: 101
                 name: PROD-WEB
-                active_gateway_mac: 02:00:0a:01:65:01
-                active_gateway_ip: 10.12.101.1
               - id: 102
                 name: PROD-DB
-                active_gateway_mac: 02:00:0a:01:65:01
-                active_gateway_ip: 10.12.102.1
             # VSX information
             vsx_isl_lagid: 256
             vsx_keepalive_vrf: mgmt
@@ -125,17 +121,6 @@ all:
                 speed_interface_group_10g: [1]  # Enables 10g speed on specified interface groups, remove variable if unused
                 vsx_isl_ports: ['1/1/49', '1/1/50']
                 vsx_system_mac: 02:00:00:00:10:01
-                mclags:
-                  - id: 1
-                    interfaces: [1/1/1]
-                    allowed_vlans: [101, 102]
-                    mtu: 9198
-                    description: ESXi-01
-                  - id: 255
-                    interfaces: [1/1/53, 1/1/54]
-                    allowed_vlans: ['all']
-                    mtu: 9198
-                    description: DC-CORE
               # Access devices are grouped by VSX pairs,
               # names of vsx_pairs can be anything alphanumeric
               # devices do not have to be physically in the same "vsx_pair"
@@ -156,7 +141,7 @@ all:
                         interfaces: [1/1/53, 1/1/54]
                         allowed_vlans: ['all']
                         mtu: 9198
-                        description: DC-CORE                    
+                        description: DC-CORE
                   hosts:
                     RSVDC-ACCESS1-1:
                       ansible_host: 172.16.117.103  # IP address of the switch, change to match 
@@ -170,17 +155,17 @@ all:
                     vsx_system_mac: 02:00:00:00:10:02
                     vsx_keepalive_ip_primary: 172.16.117.105  # IP address of the switch, change to match 
                     vsx_keepalive_ip_secondary: 172.16.117.106  # IP address of the switch, change to match 
-                    vsx_mclags:
+                    mclags:
                       - id: 1
                         interfaces: [1/1/1]
                         allowed_vlans: ['all']
                         mtu: 9198
-                        description: ESXi-01
+                        description: ESXi-02
                       - id: 255
                         interfaces: [1/1/53, 1/1/54]
                         allowed_vlans: ['all']
                         mtu: 9198
-                        description: DC-CORE                    
+                        description: DC-CORE
                   hosts:
                     RSVDC-ACCESS2-1:
                       ansible_host: 172.16.117.105  # IP address of the switch, change to match 
